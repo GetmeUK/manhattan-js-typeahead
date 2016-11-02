@@ -47,7 +47,7 @@
     "level": "error"
   },
   "space_operators": {
-    "level": "error"
+    "level": "ignore"
   },
   "spacing_after_comma": {
     "level": "error"

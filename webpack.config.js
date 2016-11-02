@@ -29,15 +29,23 @@ switch (process.env.NODE_ENV) {
 
     case 'prod':
         var uglifyPlugin = new webpack.optimize.UglifyJsPlugin({
-            compress: {warnings: false},
-            output: {comments: false}
-            })
+            beautify: false,
+            comments: false,
+            compress: {
+                drop_console: true,
+                warnings: false
+            },
+            mangle: {
+                except: ['webpackJsonp'],
+                screw_ie8 : true,
+                keep_fnames: true
+            }
+        })
 
         plugins.push(uglifyPlugin);
         break;
 
 }
-
 
 // Project config
 module.exports = {
