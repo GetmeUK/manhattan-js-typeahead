@@ -1,0 +1,111 @@
+
+// Pollyfill for older versions of Node
+require('es6-promise').polyfill()
+
+// Imports
+const path = require('path')
+const webpack = require('webpack')
+
+// Plugin config
+const plugins = [
+
+    new webpack.DefinePlugin({
+        'process.env': {
+
+            // The `NODE_ENV` flag indicates which environment web pack is compiling
+            // in/for (defaults to the local environment).
+            'NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'dev')
+
+        }
+    })
+
+];
+
+// Environment specific config
+switch (process.env.NODE_ENV) {
+
+    case 'dev':
+        break;
+
+    case 'prod':
+        var uglifyPlugin = new webpack.optimize.UglifyJsPlugin({
+            compress: {warnings: false},
+            output: {comments: false}
+            })
+
+        plugins.push(uglifyPlugin);
+        break;
+
+}
+
+
+// Project config
+module.exports = {
+    plugins: plugins,
+
+    entry: {
+        'index': [
+            path.resolve(__dirname, 'src/scripts', 'typeahead.coffee'),
+            path.resolve(__dirname, 'src/styles', 'typeahead.scss')
+        ]
+    },
+
+    output: {
+        path: path.join(__dirname, 'dist'),
+        filename: 'index.js'
+    },
+
+    module: {
+        preLoaders: [
+            // CoffeeScript (lint)
+            {
+                test: /\.coffee$/,
+                exclude: /node_modules/,
+                loader: 'coffeelint-loader'
+            },
+
+            // SASS (lint)
+            {
+                test: /\.scss$/,
+                exclude: /node_modules/,
+                loader: 'sasslint'
+            }
+        ],
+
+        loaders: [
+            // CoffeeScript (to JavaScript)
+            {
+                test: /\.coffee$/,
+                loaders: ['coffee', 'coffee-import']
+            },
+
+            // SASS (to CSS)
+            {
+                test: /\.scss$/,
+                loaders: [
+                    'file?name=typeahead.css',
+                    'extract',
+                    'css',
+                    'sass'
+                    ]
+            }
+        ]
+    },
+
+    stats: {
+        // Prevent duplicate output of SASS lint reports
+        children: false
+    },
+
+    // Loader config
+    sasslint: {
+        configFile: '.sass-lint.yml'
+    },
+
+    // Dev server
+    devServer: {
+        contentBase: path.resolve(__dirname, 'dist'),
+        inline: true,
+        port: 5999
+    }
+};
