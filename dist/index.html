@@ -12,10 +12,14 @@
         <form>
             <input
                 type="text"
-                name="programming_language"
+                name="language"
                 value=""
                 >
         </form>
         <script src="http://localhost:5999/index.js"></script>
+        <script>
+            var input = document.getElementsByName('language')[0];
+            typeahead = new ManhattanTypeahead.Typeahead(input);
+        </script>
     </body>
 </html>

@@ -28,11 +28,10 @@
     "value": 4
   },
   "newlines_after_classes": {
-    "level": "error",
-    "value": 2
+    "level": "ignore"
   },
   "no_implicit_braces": {
-    "level": "error"
+    "level": "ignore"
   },
   "no_stand_alone_at": {
     "level": "error"

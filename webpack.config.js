@@ -1,7 +1,3 @@
-
-// Pollyfill for older versions of Node
-require('es6-promise').polyfill()
-
 // Imports
 const path = require('path')
 const webpack = require('webpack')
@@ -53,12 +49,14 @@ module.exports = {
 
     entry: {
         'index': [
-            path.resolve(__dirname, 'src/scripts', 'typeahead.coffee'),
-            path.resolve(__dirname, 'src/styles', 'typeahead.scss')
+            path.resolve(__dirname, 'src/styles', 'typeahead.scss'),
+            path.resolve(__dirname, 'src/scripts', 'typeahead.coffee')
         ]
     },
 
     output: {
+        library: 'ManhattanTypeahead',
+        libraryTarget: 'umd',
         path: path.join(__dirname, 'dist'),
         filename: 'index.js'
     },
