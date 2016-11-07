@@ -4,10 +4,10 @@
   "description": "Support for typeahead behaviour on form fields.",
   "main": "index.js",
   "scripts": {
-    "build": "NODE_ENV=prod webpack --progress",
+    "dist": "NODE_ENV=dist webpack --progress",
     "live": "webpack-dev-server --progress",
     "watch": "webpack --watch --progress",
-    "test": ""
+    "test": "mocha --require coffee-script/register --compilers coffee:coffee-script"
   },
   "repository": {
     "type": "git",
@@ -28,7 +28,7 @@
     "css-loader": "^0.25.0",
     "extract-loader": "0.0.2",
     "file-loader": "^0.9.0",
-    "manhattan-essentials": "0.0.4",
+    "manhattan-essentials": "0.0.7",
     "node-sass": "^3.11.1",
     "sass-loader": "^4.0.2",
     "sasslint-loader": "0.0.1",

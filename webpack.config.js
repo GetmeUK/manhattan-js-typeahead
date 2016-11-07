@@ -13,15 +13,13 @@ const plugins = [
             'NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'dev')
 
         }
-    })
+    }),
 
+    new webpack.optimize.DedupePlugin()
 ];
 
 // Environment specific config
 switch (process.env.NODE_ENV) {
-
-    case 'dev':
-        break;
 
     case 'prod':
         var uglifyPlugin = new webpack.optimize.UglifyJsPlugin({
@@ -39,6 +37,9 @@ switch (process.env.NODE_ENV) {
         })
 
         plugins.push(uglifyPlugin);
+        break;
+
+    default:
         break;
 
 }
