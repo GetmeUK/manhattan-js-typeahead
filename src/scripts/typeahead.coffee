@@ -1,11 +1,6 @@
 import * as $ from 'manhattan-essentials'
 
 
-# @@
-# - Handle the position of the input changing - close the typeahead (resize)
-# - Add support for must match
-
-
 class Typeahead
 
     # A class that provides 'typeahead' behaviour for form fields.
@@ -71,7 +66,6 @@ class Typeahead
             @constructor.pkgPrefix
             )
 
-
         # A reference to the input the typeahead is being applied to (we also
         # store a reverse reference to this instance against the input).
         @_dom = {}
@@ -101,6 +95,9 @@ class Typeahead
         )
         document.body.appendChild(@_dom.suggestions)
 
+        # Turn off autocomplete for the input
+        @_dom.input.setAttribute('autocomplete', 'off')
+
         # Define read-only properties
         Object.defineProperty(this, 'index', {get: () => return @_index})
         Object.defineProperty(this, 'input', {value: @_dom.input})
@@ -115,6 +112,10 @@ class Typeahead
                     return
 
                 switch (ev.keyCode)
+
+                    when 9 # Tab
+                        if @mustMatch
+                            @select()
 
                     when 13 # Enter
                         if @index > -1
@@ -154,6 +155,13 @@ class Typeahead
                     suggestion
                     )
                 @select(index)
+
+        $.listen window,
+            'fullscreenchange orientationchange resize': (ev) =>
+                # We close the typeahead if the window is resized
+                if @isOpen
+                    console.log 'resize'
+                    @close('resize')
 
     # Public methods
 
@@ -247,7 +255,7 @@ class Typeahead
 
         # If an index has been provided (and it's not the same as the current
         # index) then set it.
-        if index != @index
+        if index isnt undefined and index != @index
             @_goto(index)
 
         if @index > -1
@@ -405,10 +413,8 @@ class Typeahead
                     )
 
                 # Highlight the matching portion of the label
-                console.log item
-
                 li.innerHTML = item.label.replace(
-                    RegExp(q, 'gi'),
+                    RegExp($.escapeRegExp(q), 'gi'),
                     '<mark>$&</mark>'
                     )
                 return li
