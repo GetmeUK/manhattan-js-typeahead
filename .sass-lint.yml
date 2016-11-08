@@ -79,6 +79,8 @@ rules:
     - 2
   no-empty-rulesets:
     - 2
+  no-important:
+    - 0
   no-invalid-hex:
     - 2
   no-mergeable-selectors:

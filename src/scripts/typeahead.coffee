@@ -33,7 +33,7 @@ class Typeahead
 
                 # The tag that will be used when mounting the typeahead to the
                 # DOM.
-                rootTag: 'ol'
+                rootTag: 'div'
             },
             options,
             input,
@@ -125,13 +125,13 @@ class Typeahead
                     when 27 # Esc
                         @close('esc')
 
-                    when 38 # Down arrow
-                        ev.preventDefault()
-                        @next()
-
-                    when 40 # Up arrow
+                    when 38 # Up arrow
                         ev.preventDefault()
                         @previous()
+
+                    when 40 # Down arrow
+                        ev.preventDefault()
+                        @next()
 
         $.listen @_dom.suggestions,
             'mousedown': (ev) =>
@@ -160,7 +160,6 @@ class Typeahead
             'fullscreenchange orientationchange resize': (ev) =>
                 # We close the typeahead if the window is resized
                 if @isOpen
-                    console.log 'resize'
                     @close('resize')
 
     # Public methods
@@ -197,7 +196,7 @@ class Typeahead
 
     next: () ->
         # Select the item after the currently selected item
-        suggestionCount = @_dom.suggestions.children.length
+        suggestionCount = @_suggestions.length
 
         # Check there's an item to select, if not there's nothing more to do
         if suggestionCount is 0
@@ -209,7 +208,7 @@ class Typeahead
             return @_goto(0)
 
         # Select the item after the currently selected item
-        @_goto(self.index + 1)
+        @_goto(@index + 1)
 
     open: () ->
         # Open the typeahead. Opening the typeahead will dispatch an open event
@@ -234,7 +233,7 @@ class Typeahead
 
     previous: () ->
         # Select the item before the currently selected item
-        suggestionCount = @_dom.suggestions.children.length
+        suggestionCount = @_suggestions.length
 
         # Check there's an item to select, if not there's nothing more to do
         if suggestionCount is 0
@@ -242,11 +241,11 @@ class Typeahead
 
         # Check if the currently selected item is the first item in the list, if
         # so we wrap around to the last item in the list.
-        if @index == 0
-            @_goto(suggestionCount - 1)
+        if @index is 0
+            return @_goto(suggestionCount - 1)
 
         # Select the item before the currently selected item
-        @_goto(self.index - 1)
+        @_goto(@index - 1)
 
     select: (index) ->
         # Select an item from the suggestions. Optional the index of the
@@ -408,7 +407,7 @@ class Typeahead
                 # Return an element representing the item as a suggestion in the
                 # typeahead.
                 li = $.create(
-                    'li',
+                    'div',
                     {'class': typeahead._bem('mh-typeahead', 'suggestion')}
                     )
 

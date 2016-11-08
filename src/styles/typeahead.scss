@@ -1,0 +1,25 @@
+.mh-typeahead {
+
+    &--closed {
+        display: none;
+    }
+
+    &__suggestion {
+
+        &:nth-child(even) {
+            background-color: #eee;
+        }
+
+        &--focused,
+        &--focused:nth-child(even) {
+            background-color: #00f;
+            color: #fff;
+        }
+
+        & > mark {
+            background-color: #000;
+            color: #fff;
+        }
+    }
+
+}
