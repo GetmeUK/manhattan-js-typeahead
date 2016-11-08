@@ -2,7 +2,8 @@ import * as $ from 'manhattan-essentials'
 
 
 # @@
-# - Handle resize event
+# - Handle the position of the input changing - close the typeahead (resize)
+# - Add support for must match
 
 
 class Typeahead
@@ -10,7 +11,7 @@ class Typeahead
     # A class that provides 'typeahead' behaviour for form fields.
 
     # The prefix that identifies attributes used to configure the plugin
-    @pkgPrefix = 'data-mh-typeahead--'
+    @pkgPrefix: 'data-mh-typeahead--'
 
     constructor: (input, options={}) ->
 
@@ -41,34 +42,35 @@ class Typeahead
             },
             options,
             input,
-            @pkg_prefix
+            @constructor.pkgPrefix
             )
 
         # Set up and configure behaviours
-        @_behaviour = {}
+        @_behaviours = {}
 
         # Set the default filter based on data list
-        filter = 'array'
+        fetch = 'array'
         if typeof @list is 'string'
             if @list[0] == '#'
-                filter = 'data-list'
+                fetch = 'data-list'
             else
-                filter = 'string'
+                fetch = 'string'
 
         $.config(
-            @_behaviour,
+            @_behaviours,
             {
                 coerce: 'pass-through',
-                fetch: 'array',
-                filter: filter,
+                element: 'default',
+                fetch: fetch,
+                filter: 'startswith',
                 input: 'set-value',
-                sort: 'length',
-                template: 'default'
+                sort: 'length'
             },
             options,
             input,
             @constructor.pkgPrefix
             )
+
 
         # A reference to the input the typeahead is being applied to (we also
         # store a reverse reference to this instance against the input).
@@ -100,9 +102,9 @@ class Typeahead
         document.body.appendChild(@_dom.suggestions)
 
         # Define read-only properties
-        Object.defineProperty(this, 'index', {value: @_index})
+        Object.defineProperty(this, 'index', {get: () => return @_index})
         Object.defineProperty(this, 'input', {value: @_dom.input})
-        Object.defineProperty(this, 'isOpen', {value: @_isOpen})
+        Object.defineProperty(this, 'isOpen', {get: () => return @_isOpen})
 
         # Set up event listeners for the typeahead
         $.listen @_dom.input,
@@ -133,7 +135,7 @@ class Typeahead
         $.listen @_dom.suggestions,
             'mousedown': (ev) =>
                 # We're only interested in mouse events against suggestions
-                if evt.target ==  @_dom.suggestions
+                if ev.target ==  @_dom.suggestions
                     return
 
                 # The user must have used the left mouse button
@@ -147,11 +149,11 @@ class Typeahead
                     suggestion = suggestion.parentNode
 
                 # Find the index of the suggestion and use it to select it
-                index = Array.indexOf.call(
+                index = Array.prototype.indexOf.call(
                     @_dom.suggestions.children,
                     suggestion
                     )
-                ev.select(index)
+                @select(index)
 
     # Public methods
 
@@ -168,7 +170,7 @@ class Typeahead
             return
 
         # Hide the typeahead visually
-        @_dom.suggestions.addClass(@_bem('mh-typeahead', '', 'closed'))
+        @_dom.suggestions.classList.add(@_bem('mh-typeahead', '', 'closed'))
 
         # Flag the typeahead as closed
         @_isOpen = false
@@ -178,6 +180,12 @@ class Typeahead
 
         # Dispatch a close event
         $.dispatch(@input, @_et('close'), {'reason': reason})
+
+    fromCache: (namespace, key) ->
+        # Return any value in the cache under the given namespace and key
+        if not @_cache[namespace]
+            return
+        return @_cache[namespace][key]
 
     next: () ->
         # Select the item after the currently selected item
@@ -199,8 +207,11 @@ class Typeahead
         # Open the typeahead. Opening the typeahead will dispatch an open event
         # against the input element.
 
+        # Track the position of the typeahead inline with the input
+        @_track()
+
         # Display the typeahead visually
-        @_dom.suggestions.removeClass(@_bem('mh-typeahead', '', 'closed'))
+        @_dom.suggestions.classList.remove(@_bem('mh-typeahead', '', 'closed'))
 
         # Flag the typeahead as open
         @_isOpen = true
@@ -240,7 +251,7 @@ class Typeahead
             @_goto(index)
 
         if @index > -1
-            suggestion = @suggestions[@index]
+            suggestion = @_suggestions[@index]
 
             # Dispatch a select event for the suggestion (if the event is
             # prevented then
@@ -248,13 +259,23 @@ class Typeahead
                 return
 
             # Set the value against the input
-            @constructor.behaviours[@_behaviour.input](this, suggestion)
+            @constructor.behaviours.input[@_behaviours.input](this, suggestion)
 
             # Hide the suggestions
             @close('select')
 
             # Dispatch a selected event for the suggestion
             $.dispatch(@input, @_et('selected'), {'item': suggestion})
+
+    toCache: (namespace, key, value) ->
+        # Add a value to the cache for the given namespace and cache
+        if not @_cache
+            @_cache = {}
+
+        if not @_cache[namespace]
+            @_cache[namespace] = {}
+
+        @_cache[namespace] = value
 
     update: () ->
         # Update the list of suggestions
@@ -271,23 +292,23 @@ class Typeahead
         # Fetching the list of items maybe an asynchronous process and therefore
         # we need to define what happens after the items are fetched in a
         # separate function.
-        _update = (items) ->
+        _update = (items) =>
             if items.length is 0
                 return @close('no-matches')
 
             # Coerce the items fetched into the required format for the
             # behaviours that follow.
-            coerce = @constructor.behaviours[@_behaviour.coerce]
+            coerce = @constructor.behaviours.coerce[@_behaviours.coerce]
             items = items.map (item) =>
                 return coerce(this, item)
 
             # Filter the items to suggestions that match the user's query
-            filter = @constructor.behaviours[@_behaviour.filter]
+            filter = @constructor.behaviours.filter[@_behaviours.filter]
             items = items.filter (item) =>
                 return filter(this, item, q)
 
             # Sort the items so the best matching appear first
-            sort = @constructor.behaviours[@_behaviour.sort]
+            sort = @constructor.behaviours.sort[@_behaviours.sort]
             items = items.sort (a, b) =>
                 return sort(this, q, a, b)
 
@@ -295,22 +316,22 @@ class Typeahead
             items = items.slice(0, @maxItems)
 
             # Update the suggestions
-            @suggestions = items
+            @_suggestions = items
 
             # If there are suggestions for the user to pick from then add
             # them to the DOM and show them.
-            if @suggestions.length is 0
+            if @_suggestions.length is 0
                 return @close('no-matches')
 
-            element = @constructor.behaviours[@_behaviour.fetch]
-            for suggestion in @suggestions
+            element = @constructor.behaviours.element[@_behaviours.element]
+            for suggestion in @_suggestions
                 @_dom.suggestions.appendChild(
                     element(this, suggestion, q)
                     )
             @open()
 
         # Fetch items to build our suggestions from
-        fetch = @constructor.behaviours[@_behaviour.fetch]
+        fetch = @constructor.behaviours.fetch[@_behaviours.fetch]
         fetch(this, @list, q, _update)
 
     # Private methods
@@ -341,7 +362,7 @@ class Typeahead
         @_index = index
 
         # If an item was focused...
-        if index > -1 and items.length > 0
+        if index > -1 and @_suggestions.length > 0
             # Flag the focused item as having focus
             suggestion = @_dom.suggestions.children[index]
             suggestion.classList.add(focusedClass)
@@ -349,9 +370,21 @@ class Typeahead
             # Dispatch a focus event against the input
             $.dispatch(@input, @_et('focus'), {item: @_suggestions[index]})
 
+    _track: () ->
+        # Position the typeahead inline with the input
+
+        # Get the position of the input
+        rect = @_dom.input.getBoundingClientRect()
+        top = rect.top += window.scrollY
+        left = rect.left += window.scrollX
+
+        # Position the typeahead
+        @_dom.suggestions.top = "#{top}px"
+        @_dom.suggestions.left = "#{left}px"
+
     # Behaviours
 
-    @behaviour:
+    @behaviours:
 
         # The `coerce` behaviour is used to convert fetched items to a suitable
         # objects for the remainder of the process (fitler > sort > element)
@@ -372,8 +405,10 @@ class Typeahead
                     )
 
                 # Highlight the matching portion of the label
-                li.text = item.label.replace(
-                    RegExp($.regExpEscape(input.trim()), 'gi'),
+                console.log item
+
+                li.innerHTML = item.label.replace(
+                    RegExp(q, 'gi'),
                     '<mark>$&</mark>'
                     )
                 return li
@@ -386,8 +421,9 @@ class Typeahead
 
                 # Check the cache first
                 cacheKey = q.substr(0, typeahead.minChars).toLowerCase()
-                if typeahead._cache and typeahead._cache[cacheKey]
-                    return callback(typeahead._cache[cacheKey])
+                cached = @fromCache('ajax', cacheKey)
+                if cached
+                    return callback(cached)
 
                 # Add the query to the URL
                 parts = url.split('?')
@@ -399,12 +435,13 @@ class Typeahead
                 # Set up the request
                 xhr = XMLHttpRequest()
                 xhr.addEventListener 'load', (ev) ->
+
                     # Extract the items from the JSON response
                     response = JSON.parse(ev.target.responseText)
                     if response.status == 'success'
-                        # @@ Cache the result
-
-                        callback(response.payload.items)
+                        items = response.payload.items
+                        @toCache('ajax', cacheKey, items)
+                        callback(items)
                     else
                         callback([])
 
@@ -416,7 +453,7 @@ class Typeahead
                 # Return the array (nothing to fetch)
                 callback(array)
 
-            'data-list': (typeahead, list, q) ->
+            'data-list': (typeahead, list, q, callback) ->
                 # Fetch the items from the specified data-list
                 dataList = $.one(list)
                 options = $.many('option', dataList)
@@ -433,18 +470,18 @@ class Typeahead
                     items.push(item)
                 callback(items)
 
-            'element': (typeahead, selector, q) ->
+            'element': (typeahead, selector, q, callback) ->
                 # Fetch the items from the elements selected with the selector
                 elements = $.many(selector)
                 values = (e.textContent for e in elements)
-                items = ({label: v, value: v} for v in values)
+                items = ({label: v.trim(), value: v.trim()} for v in values)
                 callback(items)
 
-            'string': (typeahead, s, q) ->
+            'string': (typeahead, s, q, callback) ->
                 # Fetch the items by splitting a comma separated string
                 values = s.split(',').filter (value) ->
                     return value.trim().length > 0
-                items = ({label: v, value: v} for v in values)
+                items = ({label: v.trim(), value: v.trim()} for v in values)
                 callback(items)
 
         # The `filter` behaviour is used to filter suggestions from the fetched
@@ -452,16 +489,13 @@ class Typeahead
         filter:
             'startswith': (typeahead, item, q) ->
                 # Return true if the items value startswith the query
-                value = item.value.toLowerCase()
-                q = q.toLowerCase()
-                return value.split(q, 1)[0] == value
+                match = item.value.toLowerCase().substr(0, q.length)
+                return q.toLowerCase() == match
 
             'contains': (typeahead, item, q) ->
                 # Return true if the items value contains the query
-                value = item.value.toLowerCase()
-                q = q.toLowerCase()
-                parts = value.split(q, 1)
-                return parts.length > 1 or parts[0] == q
+                match = item.value.toLowerCase()
+                return match.indexOf(q.toLowerCase()) > -1
 
         # The `input` behaviour is used to set the value of the input when an
         # item is selected.
