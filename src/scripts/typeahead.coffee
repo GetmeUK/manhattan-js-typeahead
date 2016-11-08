@@ -325,6 +325,9 @@ class Typeahead
             # Update the suggestions
             @_suggestions = items
 
+            # Unselect any previously selected suggestion
+            @_index = -1
+
             # If there are suggestions for the user to pick from then add
             # them to the DOM and show them.
             if @_suggestions.length is 0
