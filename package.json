@@ -1,8 +1,8 @@
 {
   "name": "manhattan-typeahead",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Support for typeahead behaviour on form fields.",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "dist": "NODE_ENV=dist webpack --progress",
     "live": "webpack-dev-server --progress",
