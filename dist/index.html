@@ -10,13 +10,16 @@
     </head>
     <body>
         <form>
+            <input type="text" name="lang" id="lang">
             <input
                 type="text"
                 name="language"
                 value=""
+                data-mh-typeahead
                 data-mh-typeahead--list="Ada, Java, JavaScript, Brainfuck, LOLCODE, Node.js, Ruby on Rails"
                 data-mh-typeahead--auto-first
                 data-mh-typeahead--must-match
+                data-mh-typeahead--filter="contains"
                 >
         </form>
         <script src="http://localhost:5999/index.js"></script>

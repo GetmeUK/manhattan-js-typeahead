@@ -190,7 +190,7 @@ class Typeahead
 
     fromCache: (namespace, key) ->
         # Return any value in the cache under the given namespace and key
-        if not @_cache[namespace]
+        if not @_cache or not @_cache[namespace]
             return
         return @_cache[namespace][key]
 
@@ -389,8 +389,8 @@ class Typeahead
         left = rect.left += window.scrollX
 
         # Position the typeahead
-        @_dom.suggestions.top = "#{top}px"
-        @_dom.suggestions.left = "#{left}px"
+        @_dom.suggestions.style.top = "#{top + rect.height}px"
+        @_dom.suggestions.style.left = "#{left}px"
 
     # Behaviours
 
@@ -402,6 +402,11 @@ class Typeahead
             'pass-through': (typeahead, item) ->
                 # Pass-through (no coercion)
                 return item
+
+            'single-value': (typeahead, item) ->
+                # Coerce a single value into an item setting both the item's
+                # label and value to the value.
+                return {value: item, label: item}
 
         # The `element` behaviour is used to create an element that will be
         # displayed as a suggestion in the typeahead.
@@ -429,7 +434,7 @@ class Typeahead
 
                 # Check the cache first
                 cacheKey = q.substr(0, typeahead.minChars).toLowerCase()
-                cached = @fromCache('ajax', cacheKey)
+                cached = typeahead.fromCache('ajax', cacheKey)
                 if cached
                     return callback(cached)
 
@@ -441,14 +446,15 @@ class Typeahead
                     url = "#{url}&q=#{q}"
 
                 # Set up the request
-                xhr = XMLHttpRequest()
+                xhr = new XMLHttpRequest()
                 xhr.addEventListener 'load', (ev) ->
 
                     # Extract the items from the JSON response
                     response = JSON.parse(ev.target.responseText)
+
                     if response.status == 'success'
                         items = response.payload.items
-                        @toCache('ajax', cacheKey, items)
+                        typeahead.toCache('ajax', cacheKey, items)
                         callback(items)
                     else
                         callback([])
@@ -472,7 +478,8 @@ class Typeahead
                         item.label = option.textContent.trim()
                         item.value = option.textContent.trim()
                     if option.value
-                        if not itme.label
+                        console.log option.value
+                        if not item.label
                             item.label = option.value.trim()
                         item.value = option.value.trim()
                     items.push(item)
@@ -495,22 +502,41 @@ class Typeahead
         # The `filter` behaviour is used to filter suggestions from the fetched
         # items by the given query.
         filter:
-            'startswith': (typeahead, item, q) ->
-                # Return true if the items value startswith the query
-                match = item.value.toLowerCase().substr(0, q.length)
-                return q.toLowerCase() == match
-
             'contains': (typeahead, item, q) ->
                 # Return true if the items value contains the query
                 match = item.value.toLowerCase()
                 return match.indexOf(q.toLowerCase()) > -1
 
+            'startswith': (typeahead, item, q) ->
+                # Return true if the items value starts with the query
+                match = item.value.toLowerCase().substr(0, q.length)
+                return q.toLowerCase() == match
+
         # The `input` behaviour is used to set the value of the input when an
         # item is selected.
         input:
+            'set-hidden': (typeahead, item) ->
+                # Set the value of the input to the item's label and the value
+                # of the associated hidden field to the item's Id or value if
+                # no Id is present.
+                #
+                # The associated hidden field should be set using a CSS selector
+                # defined in the `data-mh-typeahead--hidden` attribute against
+                # the input field.
+                typeahead.input.value = item.label
+
+                # Find the associated hidden field
+                hiddenSelector = typeahead.input.getAttribute(
+                    "#{typeahead.constructor.pkgPrefix}hidden"
+                    )
+                hidden = $.one(hiddenSelector)
+
+                # Set the hidden fields value
+                hidden.value = item.id or item.value
+
             'set-value': (typeahead, item) ->
-                # Set the value of the input to that of the item's id or value
-                # if no id is present.
+                # Set the value of the input to that of the item's Id or value
+                # if no Id is present.
                 typeahead.input.value = item.id or item.value
 
         # The `sort` behaviour sorts items by their relevance to the user's
@@ -524,17 +550,20 @@ class Typeahead
                 q = q.toLowerCase()
                 aStarts = q is a.value.substr(0, q.length).toLowerCase()
                 bStarts = q is b.value.substr(0, q.length).toLowerCase()
+
                 if aStarts and not bStarts
+                    console.log 'a'
                     return 1
                 else if bStarts and not aStarts
+                    console.log 'b'
                     return -1
 
                 # If no difference from starts vs. contains sort by length
-                if a.length isnt b.length
-                    return a.length - b.length
+                if a.value.length isnt b.value.length
+                    return a.value.length - b.value.length
 
                 # If no difference in length then sort alphabetically
-                return if a < b then -1 else 1
+                return if a.value < b.value then -1 else 1
 
 
 module.exports = {Typeahead: Typeahead}
