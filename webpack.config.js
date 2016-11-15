@@ -21,7 +21,7 @@ const plugins = [
 // Environment specific config
 switch (process.env.NODE_ENV) {
 
-    case 'prod':
+    case 'dist':
         var uglifyPlugin = new webpack.optimize.UglifyJsPlugin({
             beautify: false,
             comments: false,
