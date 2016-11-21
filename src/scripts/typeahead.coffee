@@ -1,4 +1,4 @@
-import * as $ from 'manhattan-essentials'
+$ = require 'manhattan-essentials'
 
 
 class Typeahead
@@ -282,7 +282,7 @@ class Typeahead
         if not @_cache[namespace]
             @_cache[namespace] = {}
 
-        @_cache[namespace] = value
+        @_cache[namespace][key] = value
 
     update: () ->
         # Update the list of suggestions
