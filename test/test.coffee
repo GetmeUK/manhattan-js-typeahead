@@ -92,7 +92,7 @@ describe 'Typeahead', ->
             closed = typeahead._bem('mh-typeahead', '', 'closed')
             suggestionsDom.classList.contains(closed).should.be.true
 
-        it 'should trigger a close event against the typeahead', ->
+        it 'should dispatch a close event against the typeahead', ->
 
             listener = sinon.spy()
             input.addEventListener('mh-typeahead--close', listener)
@@ -132,3 +132,35 @@ describe 'Typeahead', ->
             # Wrap round and select the first value
             typeahead.next()
             typeahead.index.should.equal 0
+
+    describe 'open', ->
+
+        beforeEach ->
+            # Set the content of input in order to populate the suggestions list
+            input.value = 'Ja'
+            $.dispatch(input, 'input')
+
+            # Close the typeahead so that we can open it
+            typeahead.close()
+
+        it 'should flag the typeahead as open', ->
+
+            typeahead.open()
+            typeahead.isOpen.should.be.true
+
+        it 'should remove the closed CSS class from the typeahead', ->
+
+            typeahead.open()
+            suggestionsDom = typeahead._dom.suggestions
+            closed = typeahead._bem('mh-typeahead', '', 'closed')
+            suggestionsDom.classList.contains(closed).should.be.false
+
+        it 'should position the typeahead in-line with the input', ->
+
+            # @@
+
+        it 'should dispatch an open event against the typeahead', ->
+
+            # @@
+
+        # autofirst option test
