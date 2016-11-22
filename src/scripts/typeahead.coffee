@@ -204,7 +204,7 @@ class Typeahead
 
         # Check if the currently selected item is the last item in the list, if
         # so we wrap around to the first item in the list.
-        if @index is (suggestionCount - 1)
+        if @index >= (suggestionCount - 1)
             return @_goto(0)
 
         # Select the item after the currently selected item
@@ -241,7 +241,7 @@ class Typeahead
 
         # Check if the currently selected item is the first item in the list, if
         # so we wrap around to the last item in the list.
-        if @index is 0
+        if @index <= 0
             return @_goto(suggestionCount - 1)
 
         # Select the item before the currently selected item
@@ -262,7 +262,7 @@ class Typeahead
 
             # Dispatch a select event for the suggestion (if the event is
             # prevented then
-            if not $.dispatch(@input, @_et('select'), item: suggestion)
+            if not $.dispatch(@input, @_et('select'), {'item': suggestion})
                 return
 
             # Set the value against the input
@@ -381,7 +381,7 @@ class Typeahead
             $.dispatch(@input, @_et('focus'), {item: @_suggestions[index]})
 
     _track: () ->
-        # Position the typeahead inline with the input
+        # Position and size the typeahead inline with the input
 
         # Get the position of the input
         rect = @_dom.input.getBoundingClientRect()
@@ -391,6 +391,7 @@ class Typeahead
         # Position the typeahead
         @_dom.suggestions.style.top = "#{top + rect.height}px"
         @_dom.suggestions.style.left = "#{left}px"
+        @_dom.suggestions.style.width = "#{rect.width}px"
 
     # Behaviours
 

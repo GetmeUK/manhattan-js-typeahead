@@ -29,6 +29,16 @@ describe 'Typeahead', ->
         # Build a form with an input field
         form = $.create('form')
         input = $.create('input', {'data-mh-typeahead': true})
+        input.getBoundingClientRect = ->
+            return {
+                bottom: 20,
+                height: 10,
+                left: 10,
+                right: 110,
+                top: 10,
+                width: 100
+                }
+
         document.body.appendChild(form)
         form.appendChild(input)
 
@@ -92,7 +102,7 @@ describe 'Typeahead', ->
             closed = typeahead._bem('mh-typeahead', '', 'closed')
             suggestionsDom.classList.contains(closed).should.be.true
 
-        it 'should dispatch a close event against the typeahead', ->
+        it 'should dispatch a close event against the input', ->
 
             listener = sinon.spy()
             input.addEventListener('mh-typeahead--close', listener)
@@ -157,10 +167,178 @@ describe 'Typeahead', ->
 
         it 'should position the typeahead in-line with the input', ->
 
-            # @@
+            typeahead.open()
 
-        it 'should dispatch an open event against the typeahead', ->
+            suggestionsDom = typeahead._dom.suggestions
+            suggestionsDom.style.left.should.equal '10px'
+            suggestionsDom.style.top.should.equal '20px'
+            suggestionsDom.style.width.should.equal '100px'
 
-            # @@
+        it 'should dispatch an open event against the input', ->
 
-        # autofirst option test
+            listener = sinon.spy()
+            input.addEventListener('mh-typeahead--open', listener)
+            typeahead.open()
+            listener.should.have.been.calledOn input
+
+    describe 'previous', ->
+
+        before ->
+            # Set the content of input in order to populate the suggestions list
+            input.value = 'Ja'
+            $.dispatch(input, 'input')
+
+        it 'should focus the previous suggestion in the list', ->
+
+            # Select the last value
+            typeahead.previous()
+            typeahead.index.should.equal 1
+
+            # Select the previous and first value
+            typeahead.previous()
+            typeahead.index.should.equal 0
+
+            # Wrap round and select the last value
+            typeahead.previous()
+            typeahead.index.should.equal 1
+
+    describe 'select', ->
+
+        beforeEach ->
+            # Set the content of input in order to populate the suggestions list
+            input.value = 'Ja'
+            $.dispatch(input, 'input')
+
+        it 'should give focus to the indexed suggestion (if provided)', ->
+
+            typeahead.select(1)
+            typeahead.index.should.equal 1
+
+        it 'should set the value against the input', ->
+
+            typeahead.next()
+            typeahead.select()
+            input.value.should.equal 'Java'
+
+        it 'should close the typeahead', ->
+
+            typeahead.next()
+            typeahead.select()
+            typeahead.isOpen.should.be.false
+
+        it 'should dispatch a select and selected event against the
+            typeahead', ->
+
+            selectListener = sinon.spy()
+            selectedListener = sinon.spy()
+            input.addEventListener('mh-typeahead--select', selectListener)
+            input.addEventListener('mh-typeahead--selected', selectedListener)
+
+            typeahead.next()
+            typeahead.select()
+
+            selectEv = selectListener.args[0][0]
+            selectedEv = selectListener.args[0][0]
+
+            selectListener.should.have.been.calledOn input
+            selectEv.item.should.deep.equal {'value': 'Java', 'label': 'Java'}
+
+            selectedListener.should.have.been.calledOn input
+            selectedEv.item.should.deep.equal {'value': 'Java', 'label': 'Java'}
+
+    describe 'toCache', ->
+
+        it 'should store a value in the cache', ->
+
+            typeahead.toCache('test', 'foo', 'bar')
+            typeahead.fromCache('test', 'foo').should.equal 'bar'
+
+    describe 'update', ->
+
+        beforeEach ->
+            typeahead.open()
+
+        describe 'when input has no value', ->
+
+            before ->
+                input.value = ''
+
+            it 'should close the typeahead', ->
+
+                typeahead.update()
+                typeahead.isOpen.should.be.false
+
+            it 'should dispatch a close event against the input', ->
+
+                listener = sinon.spy()
+                input.addEventListener('mh-typeahead--close', listener)
+                typeahead.update()
+                listener.should.have.been.calledOn input
+
+                ev = listener.args[0][0]
+                ev.reason.should.equal 'no-matches'
+
+        describe "when the input's value matches no items in the list", ->
+
+            before ->
+                input.value = 'boo'
+
+            it 'should close the typeahead', ->
+
+                typeahead.update()
+                typeahead.isOpen.should.be.false
+
+            it 'should dispatch a close event against the input', ->
+
+                listener = sinon.spy()
+                input.addEventListener('mh-typeahead--close', listener)
+                typeahead.update()
+                listener.should.have.been.calledOn input
+
+                ev = listener.args[0][0]
+                ev.reason.should.equal 'no-matches'
+
+        describe "when the input's value matches items in the list", ->
+
+            before ->
+                input.value = 'Ja'
+
+            it "should populate the typeahead's list of suggestions", ->
+
+                typeahead.update()
+
+                typeahead._suggestions.should.deep.equal [
+                    {value: 'Java', label: 'Java'},
+                    {value: 'JavaScript', label: 'JavaScript'}
+                    ]
+                typeahead._dom.suggestions.childNodes.length.should.equal 2
+
+
+# @@ Configurations
+    # - autoFirst
+    # - list
+    # - maxItems
+    # - minChars
+    # - mustMatch
+    # - rootTag
+
+# @@ Behaviours
+    # - coerce
+        # - pass-through
+        # - single-value
+    # - element
+        # - default
+    # - fetch
+        # - ajax
+        # - array
+        # - data-list
+        # - element
+        # - string
+    # - filter
+        # - contains
+        # - startswith
+    # - input
+        # - set-hidden
+        # - set-value
+    # - sort
+        # - length
