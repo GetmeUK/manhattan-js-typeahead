@@ -485,13 +485,20 @@ describe 'Typeahead (behaviours)', ->
 
     jsdom()
 
+    input = null
+    hidden = null
     typeahead = null
 
     before ->
         form = $.create('form')
-        input = $.create('input', {'data-mh-typeahead': true})
+        input = $.create('input', {
+            'data-mh-typeahead': true
+            'data-mh-typeahead--hidden': '.foo-hidden'
+            })
+        hidden = $.create('input', {'class': 'foo-hidden'})
         document.body.appendChild(form)
         form.appendChild(input)
+        form.appendChild(hidden)
         typeahead = new Typeahead(input)
 
     describe 'coerce', ->
@@ -549,7 +556,7 @@ describe 'Typeahead (behaviours)', ->
                 window.XMLHttpRequest.restore()
                 requests = []
 
-            it 'should request the list using an AJAX request', ->
+            it 'should fetch the list using an AJAX request', ->
 
                 callback = sinon.spy()
                 behaviour = Typeahead.behaviours.fetch['ajax']
@@ -571,7 +578,7 @@ describe 'Typeahead (behaviours)', ->
                     ['foo', 'foobar']
                     )
 
-            it 'should use the cache for subsequent requets', ->
+            it 'should use the cache for subsequent requests', ->
 
                 callback = sinon.spy()
                 behaviour = Typeahead.behaviours.fetch['ajax']
@@ -583,22 +590,174 @@ describe 'Typeahead (behaviours)', ->
 
         describe 'array', ->
 
-            callback = sinon.spy()
-            behaviour = Typeahead.behaviours.fetch['array']
+            it 'should fetch the list as the array passed', () ->
 
+                list = [
+                    {label: 'foo', value: 'foo'},
+                    {label: 'bar', value: 'bar'},
+                    ]
 
+                callback = sinon.spy()
+                behaviour = Typeahead.behaviours.fetch['array']
+                behaviour(typeahead, list, 'fo', callback)
+                callback.should.have.been.calledWith list
 
-# @@ Behaviours
-    # - fetch
-        # - array
-        # - data-list
-        # - element
-        # - string
-    # - filter
-        # - contains
-        # - startswith
-    # - input
-        # - set-hidden
-        # - set-value
-    # - sort
-        # - length
+        describe 'data-list', ->
+
+            datalist = null
+
+            before ->
+                datalist = $.create('datalist', {'id': 'foo'})
+                datalist.innerHTML = '''
+                    <option value="foo">
+                    <option value="foobar">
+                    '''
+                document.body.appendChild(datalist)
+
+            after ->
+                document.body.removeChild(datalist)
+
+            it 'should fetch the list from a data-list', ->
+
+                callback = sinon.spy()
+                behaviour = Typeahead.behaviours.fetch['data-list']
+                behaviour(typeahead, '#foo', 'fo', callback)
+                callback.should.have.been.called
+
+                list = callback.args[0][0]
+                list.should.deep.equal([
+                    {label: 'foo', value: 'foo'},
+                    {label: 'foobar', value: 'foobar'},
+                    ])
+
+        describe 'element', ->
+
+            element = null
+
+            before ->
+                element = $.create('ul', {'class': 'foo'})
+                element.innerHTML = '''
+                    <li>foo</li>
+                    <li>foobar</li>
+                    '''
+                document.body.appendChild(element)
+
+            after ->
+                document.body.removeChild(element)
+
+            it 'should fetch the list from a selection of elements', ->
+
+                callback = sinon.spy()
+                behaviour = Typeahead.behaviours.fetch['element']
+                behaviour(typeahead, '.foo li', 'fo', callback)
+                callback.should.have.been.called
+
+                list = callback.args[0][0]
+                list.should.deep.equal([
+                    {label: 'foo', value: 'foo'},
+                    {label: 'foobar', value: 'foobar'},
+                    ])
+
+        describe 'string', ->
+
+            it 'should fetch the list from a comma separated string', ->
+
+                callback = sinon.spy()
+                behaviour = Typeahead.behaviours.fetch['string']
+                behaviour(typeahead, 'foo,foobar', 'fo', callback)
+                callback.should.have.been.called
+
+                list = callback.args[0][0]
+                list.should.deep.equal([
+                    {label: 'foo', value: 'foo'},
+                    {label: 'foobar', value: 'foobar'},
+                    ])
+
+    describe 'filter', ->
+
+        item = {label: 'foobar', value: 'foobar'}
+
+        describe 'contains', ->
+
+            it "should return true if the item's value contains the query
+                string", ->
+
+                behaviour = Typeahead.behaviours.filter['contains']
+                result = behaviour(typeahead, item, 'oob')
+                result.should.be.true
+
+                result = behaviour(typeahead, item, 'obo')
+                result.should.be.false
+
+        describe 'startswith', ->
+
+            it "should return true if the item's value starts with the query
+                string", ->
+
+                behaviour = Typeahead.behaviours.filter['startswith']
+                result = behaviour(typeahead, item, 'foo')
+                result.should.be.true
+
+                result = behaviour(typeahead, item, 'oob')
+                result.should.be.false
+
+    describe 'input', ->
+
+        item = {label: 'foo', value: 'foo'}
+
+        describe 'set-hidden', ->
+
+            before ->
+                hidden.value = ''
+
+            it 'should set the value of an associated hidden input field', ->
+
+                behaviour = Typeahead.behaviours.input['set-hidden']
+                behaviour(typeahead, item)
+                hidden.value.should.equal 'foo'
+
+        describe 'set-value', ->
+
+            before ->
+                input.value = ''
+
+            it 'should set the value of the input field', ->
+
+                behaviour = Typeahead.behaviours.input['set-value']
+                behaviour(typeahead, item)
+                input.value.should.equal 'foo'
+
+    describe 'sort', ->
+
+        describe 'length', ->
+
+            describe 'when item A starts with and item B contains q', ->
+
+                it 'should return 1', ->
+
+                    itemA = {label: 'foobarfoo', value: 'foobarfoo'}
+                    itemB = {label: 'barfoobar', value: 'barfoobar'}
+
+                    behaviour = Typeahead.behaviours.sort['length']
+                    behaviour(typeahead, 'foo', itemA, itemB).should.equal -1
+
+            describe 'when both items start with q, but item A is shorter', ->
+
+                it 'should return 1', ->
+
+                    itemA = {label: 'foobar', value: 'foobar'}
+                    itemB = {label: 'foobarfoo', value: 'foobarfoo'}
+
+                    behaviour = Typeahead.behaviours.sort['length']
+                    behaviour(typeahead, 'foo', itemA, itemB).should.equal -1
+
+            describe 'when both items start with q, are the same length,
+                      but A has a higher alphabetically order', ->
+
+                it 'should return 1', ->
+
+                    itemA = {label: 'foobara', value: 'foobara'}
+                    itemB = {label: 'foobarb', value: 'foobarb'}
+
+                    behaviour = Typeahead.behaviours.sort['length']
+                    behaviour(typeahead, 'foo', itemA, itemB).should.equal -1

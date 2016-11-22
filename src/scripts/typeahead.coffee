@@ -479,7 +479,6 @@ class Typeahead
                         item.label = option.textContent.trim()
                         item.value = option.textContent.trim()
                     if option.value
-                        console.log option.value
                         if not item.label
                             item.label = option.value.trim()
                         item.value = option.value.trim()
@@ -553,15 +552,15 @@ class Typeahead
                 bStarts = q is b.value.substr(0, q.length).toLowerCase()
 
                 if aStarts and not bStarts
-                    console.log 'a'
-                    return 1
-                else if bStarts and not aStarts
-                    console.log 'b'
                     return -1
+                else if bStarts and not aStarts
+                    return 1
 
                 # If no difference from starts vs. contains sort by length
                 if a.value.length isnt b.value.length
-                    return a.value.length - b.value.length
+                    if a.value.length < b.value.length
+                        return -1
+                    return 1
 
                 # If no difference in length then sort alphabetically
                 return if a.value < b.value then -1 else 1
