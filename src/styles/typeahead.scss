@@ -1,25 +1,46 @@
 .mh-typeahead {
+    background-color: #fff;
+    box-shadow: \
+        0 2px 0 0 rgba(0, 0, 0, 0.1), \
+        inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+    margin-top: 10px;
+    max-width: calc(100% - 40px);
+    padding: 10px 1px;
     position: absolute;
+    width: 300px;
+    z-index: 4;
 
     &--closed {
         display: none;
     }
 
     &__suggestion {
+        padding: 5px 10px;
 
         &:nth-child(even) {
-            background-color: #eee;
+            background-color: #eff2f4;
+        }
+
+        &:hover {
+            background-color: rgba(nth(#e26a6a, 1), 0.15);
+            cursor: pointer;
+        }
+
+        > mark {
+            background-color: transparent;
+            color: #666;
+            font-weight: 700;
         }
 
         &--focused,
+        &--focused:hover,
         &--focused:nth-child(even) {
-            background-color: #00f;
+            background-color: nth(#e26a6a, 1);
             color: #fff;
-        }
 
-        & > mark {
-            background-color: #000;
-            color: #fff;
+            > mark {
+                color: #fff;
+            }
         }
     }
 

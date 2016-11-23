@@ -51,7 +51,7 @@ rules:
       allow-leading-underscore: true
       convention: hyphenatedlowercase
   indentation:
-    - 2
+    - 1
     - size: 4
   leading-zero:
     - 2
