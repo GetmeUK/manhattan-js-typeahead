@@ -21,10 +21,10 @@
   "license": "MIT",
   "devDependencies": {
     "chai": "^3.5.0",
-    "coffee-import-loader": "^1.0.0",
     "coffee-loader": "^0.7.2",
     "coffee-script": "^1.11.1",
     "coffeelint": "^1.16.0",
+    "coffeelint-loader": "^0.1.1",
     "css-loader": "^0.25.0",
     "extract-loader": "0.0.2",
     "file-loader": "^0.9.0",

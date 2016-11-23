@@ -83,7 +83,7 @@ module.exports = {
             // CoffeeScript (to JavaScript)
             {
                 test: /\.coffee$/,
-                loaders: ['coffee', 'coffee-import']
+                loaders: ['coffee']
             },
 
             // SASS (to CSS)
