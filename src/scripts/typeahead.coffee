@@ -66,12 +66,6 @@ class Typeahead
             @constructor.pkgPrefix
             )
 
-        # A reference to the input the typeahead is being applied to (we also
-        # store a reverse reference to this instance against the input).
-        @_dom = {}
-        @_dom.input = input
-        @_dom.input.__mh_typeahead = this
-
         # Provide a read-only publicly accessible property for the input
 
         # The index of the currently select item
@@ -82,6 +76,14 @@ class Typeahead
 
         # A cache of items fetched (specific to each fetch behaviour)
         @_cache = null
+
+        # Domain for related DOM elements
+        @_dom = {}
+
+        # Store a reference to the input the typeahead is being applied to (we
+        # also store a reverse reference to this instance against the input).
+        @_dom.input = input
+        @_dom.input.__mh_typeahead = this
 
         # Build the elements required for the typeahead
         @_dom.suggestions = $.create(

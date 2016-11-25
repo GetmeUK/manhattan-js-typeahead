@@ -91,6 +91,8 @@ rules:
     - 2
   no-transition-all:
     - 2
+  no-vendor-prefixes:
+    - 0
   no-universal-selectors:
     - 0
   one-declaration-per-line:
