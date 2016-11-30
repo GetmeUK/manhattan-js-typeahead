@@ -6,7 +6,7 @@ class Typeahead
     # A class that provides 'typeahead' behaviour for form fields.
 
     # The prefix that identifies attributes used to configure the plugin
-    @pkgPrefix: 'data-mh-typeahead--'
+    @clsPrefix: 'data-mh-typeahead--'
 
     constructor: (input, options={}) ->
 
@@ -37,7 +37,7 @@ class Typeahead
             },
             options,
             input,
-            @constructor.pkgPrefix
+            @constructor.clsPrefix
             )
 
         # Set up and configure behaviours
@@ -63,7 +63,7 @@ class Typeahead
             },
             options,
             input,
-            @constructor.pkgPrefix
+            @constructor.clsPrefix
             )
 
         # Provide a read-only publicly accessible property for the input
@@ -529,7 +529,7 @@ class Typeahead
 
                 # Find the associated hidden field
                 hiddenSelector = typeahead.input.getAttribute(
-                    "#{typeahead.constructor.pkgPrefix}hidden"
+                    "#{typeahead.constructor.clsPrefix}hidden"
                     )
                 hidden = $.one(hiddenSelector)
 
