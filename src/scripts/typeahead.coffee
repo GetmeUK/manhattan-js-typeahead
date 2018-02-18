@@ -166,6 +166,13 @@ class Typeahead
 
     # Public methods
 
+    clear: () ->
+        # Clear the value
+        @constructor.behaviours.input[@_behaviours.input](this, null)
+
+        # Dispatch a clear event
+        $.dispatch(@input, @_et('clear'))
+
     clearCache: () ->
         # Clear the item cache
         @_cache = null
@@ -295,6 +302,12 @@ class Typeahead
 
         # Get the value the user has entered to query against
         q = @input.value.trim()
+
+        # Check if input is empty
+        unless @input.value.trim()
+            @clear()
+
+        # Check if there's enough characters to search
         if q.length < @minChars
             return @close('no-matches')
 
@@ -525,7 +538,10 @@ class Typeahead
                 # The associated hidden field should be set using a CSS selector
                 # defined in the `data-mh-typeahead--hidden` attribute against
                 # the input field.
-                typeahead.input.value = item.label
+                if item is null
+                    typeahead.input.value = ''
+                else
+                    typeahead.input.value = item.label
 
                 # Find the associated hidden field
                 hiddenSelector = typeahead.input.getAttribute(
@@ -534,12 +550,18 @@ class Typeahead
                 hidden = $.one(hiddenSelector)
 
                 # Set the hidden fields value
-                hidden.value = item.id or item.value
+                if item is null
+                    hidden.value = ''
+                else
+                    hidden.value = item.id or item.value
 
             'set-value': (typeahead, item) ->
                 # Set the value of the input to that of the item's Id or value
                 # if no Id is present.
-                typeahead.input.value = item.id or item.value
+                if item is null
+                    typeahead.input.value = ''
+                else
+                    typeahead.input.value = item.id or item.value
 
         # The `sort` behaviour sorts items by their relevance to the user's
         # query.
