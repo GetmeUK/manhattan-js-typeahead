@@ -31,6 +31,13 @@ export class Typeahead {
                 'disableCache': false,
 
                 /**
+                 * A selector used with the `input` behaviour (see
+                 * `setHidden`) to select a hidden input field to populate
+                 * when a suggestion is selected.
+                 */
+                'hiddenSelector': '',
+
+                /**
                  * The list of typeahead suggestions, the fetch behaviour will
                  * determine the required data type for the list option.
                  */
@@ -293,18 +300,84 @@ Typeahead.behaviours = {
         },
 
         /**
+         * Split the list option (which should be a string) ny
+         */
+        'csv': (inst, list, q) => {
+            return '@@'
+        },
+
+        /**
          * Select a <datalist> element using the list option as a CSS selector
-         * and return options as suggestions.
+         * and return its options as suggestions.
          */
         'dataList': (inst, list, q) => {
             return '@@'
         },
 
         /**
-         *
+         * Select a list of DOM element using the list option as a CSS
+         * selector and return the content of the elements as suggestions.
          */
-        'element': (inst, list, q) => {
+        'elements': (inst, list, q) => {
             return '@@'
+        }
+    },
+
+    /**
+     * The `filter` behaviour is used to filter suggestions against the query.
+     */
+    'filter': {
+
+        /**
+         * Return true if the suggestion contains the query
+         */
+        'contains': (inst, suggestion, q) => {
+            const value = suggestion.value.toLowerCase()
+            return value.indexOf(q.toLowerCase()) > -1
+        },
+
+        /**
+         * Return true if the suggestion starts with the query
+         */
+        'startswith': (inst, suggestion, q) => {
+            const value = suggestion.value.toLowerCase().substr(0, q.length)
+            return value === q.toLowerCase()
+        }
+    },
+
+    /**
+     * The `input` behaviour is used to set the value of the input when a
+     * suggestion is selected.
+     */
+    'input': {
+
+        /**
+         * Set the value of the input as the suggestion's label and the value
+         * of a hidden input (see `hiddenSelector` option) as the suggestion's
+         * value.
+         */
+        'setHidden': (inst, suggestion) => {
+            return '@@'
+        },
+
+        /**
+         * Set the value of the input to the suggestion's value.
+         */
+        'setValue': (inst, suggestion) => {
+            return '@@'
+        }
+    },
+
+    /**
+     * The `sort` behaviour sorts suggestions by their relevance to the query
+     */
+    'sort': {
+
+        /**
+         * Sort a suggestion by startswith, then contains, then string length.
+         */
+        'length': (inst, q, a, b) => {
+            return false
         }
     }
 
