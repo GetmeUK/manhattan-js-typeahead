@@ -226,8 +226,7 @@ describe 'Typeahead (class)', ->
             typeahead.select()
             typeahead.isOpen.should.be.false
 
-        it 'should dispatch a select and selected event against the
-            typeahead', ->
+        it 'should dispatch a select and selected event against the input', ->
 
             selectListener = sinon.spy()
             selectedListener = sinon.spy()
