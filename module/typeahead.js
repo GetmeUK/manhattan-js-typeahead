@@ -188,10 +188,6 @@ export class Typeahead {
                 this.select(index)
             },
 
-            'track': (event) => {
-                this._track()
-            },
-
             'update': (event) => {
                 this._update()
             }
