@@ -216,7 +216,51 @@ export class Typeahead {
 
 // -- Behaviours --
 
-Typeahead.behaviours = {}
+Typeahead.behaviours = {
+
+    /**
+     * The `coerce` behaviour is used to convert a fetched suggestion into a
+     * suitable object for the `fitler` > `sort` > `element` behaviours.
+     */
+    'coerce': {
+
+        /**
+         * Pass-through (no coercion)
+         */
+        'passThrough': (inst, suggestion) => {
+            return suggestion
+        },
+
+        /**
+         * Coerce a value into a suggestion setting both the suggestion's
+         * label and value as the value.
+         */
+        'valueOnly': (inst, suggestion) => {
+            return {
+                'label': suggestion,
+                'value': suggestion
+            }
+        }
+    },
+
+    /**
+     * The `element` behaviour is used to create a new element that will be
+     * displayed as a suggestion in the typeahead.
+     */
+    'element': {
+
+        /**
+         * Return an element containing the suggestions label with the
+         * matching segment of the label marked / highlighted.
+         */
+        'default': (inst, suggestion, q) => {
+
+            // @@ START HERE
+            return '@@'
+        }
+    }
+
+}
 
 
 // -- CSS classes --
