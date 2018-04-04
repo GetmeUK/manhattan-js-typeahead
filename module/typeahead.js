@@ -255,7 +255,55 @@ Typeahead.behaviours = {
          */
         'default': (inst, suggestion, q) => {
 
-            // @@ START HERE
+            // Create the element to contain the suggestion
+            const elm = $.create(
+                'div',
+                {'class': inst.constructor.css['suggestion']}
+            )
+
+            // Add the suggestion to the element and mark the portion of the
+            // suggestion that matches the query.
+            elm.innerHTML = suggestion.label.replace(
+                new RegExp($.escapeRegExp(q), 'gi'),
+                '<mark>$&</mark>'
+            )
+
+            return elm
+        }
+    },
+
+    /**
+     * The `fetch` behaviour is used to retreive a list suggestions for the
+     * typeahead.
+     */
+    'fetch': {
+
+        /**
+         * Fetch the suggestions using an AJAX call.
+         */
+        'ajax': (inst, list, q) => {
+            return '@@'
+        },
+
+        /**
+         * Return the list option (which should be an array)
+         */
+        'array': (inst, list, q) => {
+            return '@@'
+        },
+
+        /**
+         * Select a <datalist> element using the list option as a CSS selector
+         * and return options as suggestions.
+         */
+        'dataList': (inst, list, q) => {
+            return '@@'
+        },
+
+        /**
+         *
+         */
+        'element': (inst, list, q) => {
             return '@@'
         }
     }
@@ -265,7 +313,19 @@ Typeahead.behaviours = {
 
 // -- CSS classes --
 
-Typeahead.css = {}
+Typeahead.css = {
+
+    /**
+     * Applied to suggestions that appear within the typeahead.
+     */
+    'suggestion': 'mh-typeahead__suggestion',
+
+    /**
+     * Applied to the typeahead element.
+     */
+    'typeahead': 'mh-typeahead'
+
+}
 
 
 // @@ Define a separate class for the cache
