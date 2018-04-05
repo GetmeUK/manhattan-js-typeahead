@@ -96,6 +96,9 @@ export class Typeahead {
         // A flag indicating if the typeahead is open (visible)
         this._open = false
 
+        // The list of suggestions currently displayed in the typeahead
+        this._suggestions = null
+
         // Domain for related DOM elements
         this._dom = {
             'input': null,
@@ -225,7 +228,22 @@ export class Typeahead {
      * Close the typeahead.
      */
     close() {
-        return this.todo
+        // If the typeahead is already closed there's nothing to do
+        if (!this.isOpen) {
+            return
+        }
+
+        // Hide the typeahead
+        this.typeahead.classList.remove(this.constructor.css['open'])
+
+        // Flag the typeahead as closed
+        this._open = false
+
+        // Reset the index
+        this._index = -1
+
+        // Dispatch closed event against the input
+        $.dispatch(this.input, 'closed')
     }
 
     /**
