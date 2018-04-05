@@ -47,7 +47,7 @@ export class Typeahead {
                  * The maxium number of suggestions the typeahead should
                  * display.
                  */
-                'maxItems': 10,
+                'maxSuggestions': 10,
 
                 /**
                  * The minimum number of characters a user must enter before
@@ -89,8 +89,8 @@ export class Typeahead {
         // determined by the `fetch` behaviour and the `disableCache` options).
         this._cache = null
 
-        // The index of the currently selected suggestion with the typeahead
-        // (-1 indicates that no suggestion is selected).
+        // The index of the currently focused suggestion with the typeahead
+        // (-1 indicates that no suggestion has focus).
         this._index = -1
 
         // A flag indicating if the typeahead is open (visible)
@@ -110,6 +110,11 @@ export class Typeahead {
 
         // Set up event handlers
         this._handlers = {
+
+            'clear': (event) => {
+                event.preventDefault()
+                this.clear()
+            },
 
             'close': (event) => {
                 this.close()
@@ -199,6 +204,13 @@ export class Typeahead {
 
     // -- Getters & Setters --
 
+    get focused() {
+        if (this.index === -1) {
+            return null
+        }
+        return this._suggestions[this.index]
+    }
+
     get index() {
         return this._index
     }
@@ -224,6 +236,13 @@ export class Typeahead {
     }
 
     // -- Public methods --
+
+    /**
+     * Clear any existing value from the input field.
+     */
+    clear() {
+        this.constructor.behaviours.input[this._behaviouts.input](this, null)
+    }
 
     /**
      * Clear the cache.
@@ -277,15 +296,15 @@ export class Typeahead {
             return
         }
 
-        // If the last suggestion is currently selected then cycle round to
-        // the first suggestion.
+        // If the last suggestion currently has focus then cycle round to the
+        // first suggestion.
         if (this.index >= this.suggestionCount) {
-            this._select(0)
+            this._focus(0)
             return
         }
 
         // Select the next suggestion
-        this._select(this.index + 1)
+        this._focus(this.index + 1)
     }
 
     /**
@@ -301,10 +320,10 @@ export class Typeahead {
         // Flag the typeahead as open
         this._open = true
 
-        // If the `autoFirst` option is true and no suggestion is currently
-        // selected then select the first option.
+        // If the `autoFirst` option is true and no suggestion currently has
+        // focus then select the first option.
         if (this._options.autoFirst && this.index === -1) {
-            this._goto(0)
+            this._focus(0)
         }
 
         // Dispatch opened event against the input
@@ -320,38 +339,89 @@ export class Typeahead {
             return
         }
 
-        // If the first suggestion is currently selected then cycle round to
+        // If the first suggestion is currently has focus then cycle round to
         // the first suggestion.
         if (this.index <= 0) {
-            this._select(this.suggestionCount - 1)
+            this._focus(this.suggestionCount - 1)
             return
         }
 
         // Select the previous suggestion
-        this._select(this.index - 1)
+        this._focus(this.index - 1)
     }
 
     /**
-     * Select the suggestion at the given index.
+     * Select the suggestion at the given index or if no index is provided
+     * then select the current suggestion.
      */
-    select(index) {
-        return this.todo
+    select(index=null) {
+
+        // If an index is given (and it's not the the same as the current
+        // index then select it).
+        if (index !== null && index !== this.index) {
+            this._focus(index)
+        }
+
+        // Check that a suggestion has focus
+        if (this.index === -1) {
+            return
+        }
+
+        // Dispatch select event against the input
+        const suggestion = this._suggestions[this.index]
+        if (!$.dispatch(this.input, 'select', {suggestion})) {
+            return
+        }
+
+        // Set value in the associated input
+        this.constructor.behaviours.input[this._behaviours.input](
+            this,
+            suggestion
+        )
+
+        // Close the typeahead
+        this.close()
+
+        // Dispatch selected event against the input
+        $.dispatch(this.input, 'selected', {suggestion})
     }
 
     // -- Private methods --
 
     /**
-     * Select the suggestion at the given index (without triggering an event).
+     * Focus on the suggestion at the given index.
      */
-    _select(index) {
-        return this.todo
+    _focus(index) {
+
+        // Remove the focused CSS class any suggestion element in the type
+        // ahead.
+        const focusedCSS = this.constructor.css['focused']
+        const focusedElm = $.one(`.${focusedCSS}`, this.typeahead)
+        if (focusedElm) {
+            focusedElm.classList.remove('focusedCSS')
+        }
+
+        // Update the index of the focused suggestion
+        this._index = index
+
+        // If a suggestion was given focus apply the focused CSS class to the
+        // associated suggestion element in the typeahead.
+        if (this.focused) {
+            const suggestionElm = this._dom.suggestions.children[this.index]
+            suggestionElm.classList.add(focusedCSS)
+        }
     }
 
     /**
      * Position the typehead inline with the associated input element.
      */
     _track() {
-        return this.todo
+        const rect = this.input.getBoundingClientRect()
+        const top = rect.top + window.pageYOffset
+        const left = rect.left + window.pageXOffset
+        this.typeahead.style.top = `${top + rect.height}px`
+        this.typeahead.style.left = `${left}px`
+        this.typeahead.style.width = `${rect.width}px`
     }
 
     /**
@@ -359,7 +429,59 @@ export class Typeahead {
      * query.
      */
     _update() {
-        return this.todo
+        const {behaviours} = this.constructor
+
+        // Clear all current suggestions and associated elements
+        this._index = -1
+        this._suggestions = []
+
+        // Get the query string
+        const q = behaviours.query[this._behaviours.query](this)
+
+        // If there's no query string then clear the current input field's
+        // value.
+        if (q.length === 0) {
+            this.clear()
+        }
+
+        // If the query string is shorter than the minumum number of
+        // characters required the we close the typeahead and we're done.
+        if (q.length < this._options.minChars) {
+            this.close()
+            return
+        }
+
+        // Fetch the list of suggestions
+        behaviours.fetch[this._behaviours.fetch](this, q)
+            .then((suggestions) => {
+
+                // If no suggestions were returned then close the typeahead
+                // and we're done.
+                if (suggestions.length === 0) {
+                    this.close()
+                    return
+                }
+
+                const todo = '@@'
+
+                // @@ Coerce the suggestions fetched into the required format
+                // (e.g {'label': '...', 'value': '...', ...}.
+
+                // @@ Filter the suggestions to just those that match the query
+
+                // @@ Sort the suggestions
+
+                // @@ Limit the list of suggestions to the maximum suggestions
+
+                // @@ ...
+
+            })
+            .catch(() => {
+
+                // If there was an error fetching the suggestions close the
+                // typeahead and we're done.
+                this.close()
+            })
     }
 }
 
@@ -431,21 +553,21 @@ Typeahead.behaviours = {
         /**
          * Fetch the suggestions using an AJAX call.
          */
-        'ajax': (inst, list, q) => {
+        'ajax': (inst, q) => {
             return '@@'
         },
 
         /**
          * Return the list option (which should be an array)
          */
-        'array': (inst, list, q) => {
+        'array': (inst, q) => {
             return '@@'
         },
 
         /**
          * Split the list option (which should be a string) ny
          */
-        'csv': (inst, list, q) => {
+        'csv': (inst, q) => {
             return '@@'
         },
 
@@ -453,7 +575,7 @@ Typeahead.behaviours = {
          * Select a <datalist> element using the list option as a CSS selector
          * and return its options as suggestions.
          */
-        'dataList': (inst, list, q) => {
+        'dataList': (inst, q) => {
             return '@@'
         },
 
@@ -461,7 +583,7 @@ Typeahead.behaviours = {
          * Select a list of DOM element using the list option as a CSS
          * selector and return the content of the elements as suggestions.
          */
-        'elements': (inst, list, q) => {
+        'elements': (inst, q) => {
             return '@@'
         }
     },
@@ -501,6 +623,8 @@ Typeahead.behaviours = {
          */
         'setHidden': (inst, suggestion) => {
             return '@@'
+
+            // Trigger change event against the input
         },
 
         /**
@@ -508,7 +632,24 @@ Typeahead.behaviours = {
          */
         'setValue': (inst, suggestion) => {
             return '@@'
+
+            // Trigger change event against the input
         }
+    },
+
+    /**
+     * The `query` behaviour is used to obtain the query string from the
+     * associated input field.
+     */
+    'query': {
+
+        /**
+         * Return the the value of the associated input field.
+         */
+        'value': (inst) => {
+            return inst.input.value.trim()
+        }
+
     },
 
     /**
@@ -532,6 +673,11 @@ Typeahead.behaviours = {
 Typeahead.css = {
 
     /**
+     * Applied to the suggestion that currently has focus.
+     */
+    'focused': 'mh-typeahead__suggestion--focused',
+
+    /**
      * Applied to the typeahead when it is open.
      */
     'open': 'mh-typeahead--open',
@@ -547,3 +693,5 @@ Typeahead.css = {
     'typeahead': 'mh-typeahead'
 
 }
+
+// Clear button option
