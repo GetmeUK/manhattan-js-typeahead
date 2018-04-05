@@ -492,6 +492,3 @@ Typeahead.css = {
     'typeahead': 'mh-typeahead'
 
 }
-
-
-// @@ Define a separate class for the cache
