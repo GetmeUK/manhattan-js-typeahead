@@ -211,6 +211,14 @@ export class Typeahead {
         return this._open
     }
 
+    get suggestionCount() {
+        return this._suggestions.length
+    }
+
+    get suggestions() {
+        return this._suggestions.slice()
+    }
+
     get typeahead() {
         return this._dom.typeahead
     }
@@ -264,21 +272,63 @@ export class Typeahead {
      * Select the next suggestion.
      */
     next() {
-        return this.todo
+        // If there's no suggestions then there's nothing to do
+        if (this.suggestionCount === 0) {
+            return
+        }
+
+        // If the last suggestion is currently selected then cycle round to
+        // the first suggestion.
+        if (this.index >= this.suggestionCount) {
+            this._select(0)
+            return
+        }
+
+        // Select the next suggestion
+        this._select(this.index + 1)
     }
 
     /**
      * Open the typeahead.
      */
     open() {
-        return this.todo
+        // Ensure the typeahead is position inline with associated input field
+        this._track()
+
+        // Show the typeahead
+        this.typeahead.classList.add(this.constructor.css['open'])
+
+        // Flag the typeahead as open
+        this._open = true
+
+        // If the `autoFirst` option is true and no suggestion is currently
+        // selected then select the first option.
+        if (this._options.autoFirst && this.index === -1) {
+            this._goto(0)
+        }
+
+        // Dispatch opened event against the input
+        $.dispatch(this.input, 'opened')
     }
 
     /**
      * Select the previous suggestion.
      */
     previous() {
-        return this.todo
+        // If there's no suggestions then there's nothing to do
+        if (this.suggestionCount === 0) {
+            return
+        }
+
+        // If the first suggestion is currently selected then cycle round to
+        // the first suggestion.
+        if (this.index <= 0) {
+            this._select(this.suggestionCount - 1)
+            return
+        }
+
+        // Select the previous suggestion
+        this._select(this.index - 1)
     }
 
     /**
@@ -480,6 +530,11 @@ Typeahead.behaviours = {
 // -- CSS classes --
 
 Typeahead.css = {
+
+    /**
+     * Applied to the typeahead when it is open.
+     */
+    'open': 'mh-typeahead--open',
 
     /**
      * Applied to suggestions that appear within the typeahead.
