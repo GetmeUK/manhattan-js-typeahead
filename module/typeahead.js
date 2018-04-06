@@ -75,8 +75,8 @@ export class Typeahead {
                 'coerce': 'passThrough',
                 'element': 'default',
                 'fetch': 'array',
-                'filter': 'filter',
-                'input': 'set-value',
+                'filter': 'startswith',
+                'input': 'setValue',
                 'query': 'value',
                 'sort': 'length'
             },
@@ -216,7 +216,7 @@ export class Typeahead {
     }
 
     get input() {
-        return this._dom._index
+        return this._dom.input
     }
 
     get isOpen() {
@@ -241,7 +241,7 @@ export class Typeahead {
      * Clear any existing value from the input field.
      */
     clear() {
-        this.constructor.behaviours.input[this._behaviouts.input](this, null)
+        this.constructor.behaviours.input[this._behaviours.input](this, null)
     }
 
     /**
@@ -277,14 +277,81 @@ export class Typeahead {
      * Remove the typeahead.
      */
     destroy() {
-        return this.todo
+        // Remove event listeners
+        $.ignore(
+            window,
+            {
+                'fullscreenchange': this._handlers.close,
+                'orientationchange': this._handlers.close,
+                'resize': this._handlers.close
+            }
+        )
+
+        $.ignore(
+            this.input,
+            {
+                'blur': this._handlers.close,
+                'change': this._handlers.input,
+                'click': this._handlers.open,
+                'focus': this._handlers.open
+            }
+        )
+
+        if (this.typeahead) {
+            $.listen(
+                this.typeahead,
+                {'mousedown': this._handlers.select}
+            )
+
+            // Remove the element
+            document.body.removeChild(this.typeahead)
+        }
+
+        // Remove the typeahead reference from the input
+        delete this._dom.input._mhDatePicker
     }
 
     /**
      * Initialize the typeahead.
      */
     init() {
-        return this.todo
+        // Store a reference to the typeahead instance against the input
+        this.input._mhTypeahead = this
+
+        // Prevent autocomplete behaviour against the input
+        this.input.setAttribute('autocomplete', 'off')
+
+        // Create the typeahead element
+        this._dom.typeahead = $.create(
+            'div',
+            {'class': this.constructor.css['typeahead']}
+        )
+        document.body.appendChild(this._dom.typeahead)
+
+        // Set up event listeners
+        $.listen(
+            window,
+            {
+                'fullscreenchange': this._handlers.close,
+                'orientationchange': this._handlers.close,
+                'resize': this._handlers.close
+            }
+        )
+
+        $.listen(
+            this.typeahead,
+            {'mousedown': this._handlers.select}
+        )
+
+        $.listen(
+            this.input,
+            {
+                'blur': this._handlers.close,
+                'input': this._handlers.update,
+                'keydown': this._handlers.nav
+            }
+        )
+
     }
 
     /**
@@ -298,7 +365,7 @@ export class Typeahead {
 
         // If the last suggestion currently has focus then cycle round to the
         // first suggestion.
-        if (this.index >= this.suggestionCount) {
+        if (this.index >= (this.suggestionCount - 1)) {
             this._focus(0)
             return
         }
@@ -398,7 +465,7 @@ export class Typeahead {
         const focusedCSS = this.constructor.css['focused']
         const focusedElm = $.one(`.${focusedCSS}`, this.typeahead)
         if (focusedElm) {
-            focusedElm.classList.remove('focusedCSS')
+            focusedElm.classList.remove(focusedCSS)
         }
 
         // Update the index of the focused suggestion
@@ -407,7 +474,7 @@ export class Typeahead {
         // If a suggestion was given focus apply the focused CSS class to the
         // associated suggestion element in the typeahead.
         if (this.focused) {
-            const suggestionElm = this._dom.suggestions.children[this.index]
+            const suggestionElm = this.typeahead.children[this.index]
             suggestionElm.classList.add(focusedCSS)
         }
     }
@@ -434,6 +501,9 @@ export class Typeahead {
         // Clear all current suggestions and associated elements
         this._index = -1
         this._suggestions = []
+        while (this.typeahead.firstChild) {
+            this.typeahead.removeChild(this.typeahead.firstChild)
+        }
 
         // Get the query string
         const q = behaviours.query[this._behaviours.query](this)
@@ -615,18 +685,26 @@ Typeahead.behaviours = {
          * Return the list option (which should be an array)
          */
         'array': (inst, q) => {
-            return inst.list
+            return new Promise((resolve, reject) => {
+                resolve(inst._options.list)
+            })
         },
 
         /**
          * Split the list option (which should be a string) ny
          */
         'csv': (inst, q) => {
-            return inst.list.split(',').map((value) => {
-                return {
-                    'label': value.trim(),
-                    'value': value.trim()
-                }
+            return new Promise((resolve, reject) => {
+
+                const {list} = inst._options
+                const suggestions = list.split(',').map((value) => {
+                    return {
+                        'label': value.trim(),
+                        'value': value.trim()
+                    }
+                })
+                resolve(suggestions)
+
             })
         },
 
@@ -635,11 +713,17 @@ Typeahead.behaviours = {
          * and return its options as suggestions.
          */
         'dataList': (inst, q) => {
-            return $.many('option', inst._options.list).map((elm) => {
-                return {
-                    'label': (elm.textContent || elm.value || '').trim(),
-                    'value': (elm.value || elm.textContent || '').trim()
-                }
+            return new Promise((resolve, reject) => {
+
+                const elms = $.many('option', inst._options.list)
+                const suggestions = elms.map((elm) => {
+                    return {
+                        'label': (elm.textContent || elm.value || '').trim(),
+                        'value': (elm.value || elm.textContent || '').trim()
+                    }
+                })
+                resolve(suggestions)
+
             })
         },
 
@@ -648,12 +732,18 @@ Typeahead.behaviours = {
          * selector and return the content of the elements as suggestions.
          */
         'elements': (inst, q) => {
-            return $.many(inst._options.list).map((elm) => {
-                const content = elm.textContent.trim()
-                return {
-                    'label': content,
-                    'value': content
-                }
+            return new Promise((resolve, reject) => {
+
+                const elms = $.many(inst._options.list)
+                const suggestions = elms.map((elm) => {
+                    const content = elm.textContent.trim()
+                    return {
+                        'label': content,
+                        'value': content
+                    }
+                })
+                resolve(suggestions)
+
             })
         }
     },

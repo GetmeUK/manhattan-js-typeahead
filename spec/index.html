@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <title>manhattan-typeahead</title>
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="typeahead.css"
+            >
+    </head>
+    <body>
+        <label>
+            Language
+            <input
+                name="language"
+                value=""
+                data-mh-typeahead
+                data-mh-typeahead--list="Ada,Java,JavaScript,SQL,C++,C#,Python,PHP,Ruby"
+                data-mh-typeahead--fetch="csv"
+                >
+        </label>
+
+        <script src="../node_modules/manhattan-essentials/umd/index.js"></script>
+        <script src="../umd/index.js"></script>
+        <script>
+
+            const $ = window['manhattan-essentials']
+
+            const Typeahead = window['manhattan-typeahead']
+                .typeahead
+                .Typeahead
+
+            for(let fieldElm of $.many('[data-mh-typeahead]')) {
+                let t = new Typeahead(fieldElm)
+                t.init()
+            }
+
+        </script>
+    </body>
+</html>

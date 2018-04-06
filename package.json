@@ -13,7 +13,7 @@
   ],
   "scripts": {
     "build": "webpack --mode production || exit 0",
-    "build-css": "node-sass --include-path scss scss/date_picker.scss spec/typeahead.css",
+    "build-css": "node-sass --include-path scss scss/ -o spec/",
     "coveralls": "nyc npm test && nyc report --reporter=text-lcov | coveralls",
     "dev-build": "webpack --mode development || exit 0",
     "lint": "eslint module spec *.js --quiet || exit 0",
