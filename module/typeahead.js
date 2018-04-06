@@ -31,7 +31,7 @@ export class Typeahead {
                 'disableCache': false,
 
                 /**
-                 * A selector used with the `input` behaviour (see
+                 * A CSS selector used with the `input` behaviour (see
                  * `setHidden`) to select a hidden input field to populate
                  * when a suggestion is selected.
                  */
@@ -573,7 +573,7 @@ export class Typeahead {
                 this.open()
 
             })
-            .catch(() => {
+            .catch((e) => {
 
                 // If there was an error fetching the suggestions close the
                 // typeahead and we're done.
@@ -691,24 +691,6 @@ Typeahead.behaviours = {
         },
 
         /**
-         * Split the list option (which should be a string) ny
-         */
-        'csv': (inst, q) => {
-            return new Promise((resolve, reject) => {
-
-                const {list} = inst._options
-                const suggestions = list.split(',').map((value) => {
-                    return {
-                        'label': value.trim(),
-                        'value': value.trim()
-                    }
-                })
-                resolve(suggestions)
-
-            })
-        },
-
-        /**
          * Select a <datalist> element using the list option as a CSS selector
          * and return its options as suggestions.
          */
@@ -745,7 +727,26 @@ Typeahead.behaviours = {
                 resolve(suggestions)
 
             })
+        },
+
+        /**
+         * Parse the list as a JSON string and return the result.
+         */
+        'json': (inst, q) => {
+            return new Promise((resolve, reject) => {
+                resolve(JSON.parse(inst._options.list))
+            })
+        },
+
+        /**
+         * Split the list option (which should be a comma separated string).
+         */
+        'string': (inst, q) => {
+            return new Promise((resolve, reject) => {
+                resolve(inst._options.split(','))
+            })
         }
+
     },
 
     /**
