@@ -453,27 +453,54 @@ export class Typeahead {
 
         // Fetch the list of suggestions
         behaviours.fetch[this._behaviours.fetch](this, q)
-            .then((suggestions) => {
+            .then((rawSuggestions) => {
 
                 // If no suggestions were returned then close the typeahead
                 // and we're done.
-                if (suggestions.length === 0) {
+                if (rawSuggestions.length === 0) {
                     this.close()
                     return
                 }
 
-                const todo = '@@'
-
-                // @@ Coerce the suggestions fetched into the required format
+                // Coerce the suggestions fetched into the required format
                 // (e.g {'label': '...', 'value': '...', ...}.
+                const coerce = behaviours.coerce[this._behaviours.coerce]
+                let suggestions = rawSuggestions.map((suggestion) => {
+                    return coerce(this, suggestion)
+                })
 
-                // @@ Filter the suggestions to just those that match the query
+                // Filter the suggestions to just those that match the query
+                const filter = behaviours.filter[this._behaviours.filter]
+                suggestions = suggestions.filter((suggestion) => {
+                    return filter(this, suggestion, q)
+                })
 
-                // @@ Sort the suggestions
+                // Sort the suggestions
+                const sort = behaviours.sort[this._behaviours.sort]
+                suggestions = suggestions.sort((a, b) => {
+                    return sort(this, q, a, b)
+                })
 
-                // @@ Limit the list of suggestions to the maximum suggestions
+                // Limit the list of suggestions to the maximum suggestions
+                suggestions = suggestions.slice(0, this._options.maxItems)
 
-                // @@ ...
+                // Update the suggestions
+                this._suggestions = suggestions
+
+                // If there are no suggestions matching the query then close
+                // the typeahead and we're done.
+                if (this._suggestions.length === 0) {
+                    this.close()
+                    return
+                }
+
+                // Build the suggestion elements for each of the matching
+                // suggestions and display the typeahead.
+                const element = behaviours.element[this._behaviours.element]
+                for (let suggestion of this._suggestions) {
+                    this.typeahead.appendChild(element(this, suggestion, q))
+                }
+                this.open()
 
             })
             .catch(() => {
@@ -554,21 +581,53 @@ Typeahead.behaviours = {
          * Fetch the suggestions using an AJAX call.
          */
         'ajax': (inst, q) => {
-            return '@@'
+
+            // Check for cached suggestions
+            const cacheKey = q.substr(0, inst._options.minChars).toLowerCase()
+
+            if (!inst._options.disableCache) {
+                if (inst._cache[cacheKey]) {
+                    return inst._cache[cacheKey]
+                }
+            }
+
+            // Fetch the suggestions via an AJAX request
+            let url = inst._options.list
+            if (url.split('?', 2).length === 1) {
+                url = `${url}?q=${q}`
+            } else {
+                url = `${url}&q=${q}`
+            }
+
+            return fetch(url)
+                .then((response) => {
+                    return response.json()
+                })
+                .then((json) => {
+                    if (!inst._options.disableCache) {
+                        inst._cache[cacheKey] = json.payload.items
+                    }
+                    return json.payload.items
+                })
         },
 
         /**
          * Return the list option (which should be an array)
          */
         'array': (inst, q) => {
-            return '@@'
+            return inst.list
         },
 
         /**
          * Split the list option (which should be a string) ny
          */
         'csv': (inst, q) => {
-            return '@@'
+            return inst.list.split(',').map((value) => {
+                return {
+                    'label': value.trim(),
+                    'value': value.trim()
+                }
+            })
         },
 
         /**
@@ -576,7 +635,12 @@ Typeahead.behaviours = {
          * and return its options as suggestions.
          */
         'dataList': (inst, q) => {
-            return '@@'
+            return $.many('option', inst._options.list).map((elm) => {
+                return {
+                    'label': (elm.textContent || elm.value || '').trim(),
+                    'value': (elm.value || elm.textContent || '').trim()
+                }
+            })
         },
 
         /**
@@ -584,7 +648,13 @@ Typeahead.behaviours = {
          * selector and return the content of the elements as suggestions.
          */
         'elements': (inst, q) => {
-            return '@@'
+            return $.many(inst._options.list).map((elm) => {
+                const content = elm.textContent.trim()
+                return {
+                    'label': content,
+                    'value': content
+                }
+            })
         }
     },
 
@@ -597,16 +667,16 @@ Typeahead.behaviours = {
          * Return true if the suggestion contains the query
          */
         'contains': (inst, suggestion, q) => {
-            const value = suggestion.value.toLowerCase()
-            return value.indexOf(q.toLowerCase()) > -1
+            const label = suggestion.label.toLowerCase()
+            return label.indexOf(q.toLowerCase()) > -1
         },
 
         /**
          * Return true if the suggestion starts with the query
          */
         'startswith': (inst, suggestion, q) => {
-            const value = suggestion.value.toLowerCase().substr(0, q.length)
-            return value === q.toLowerCase()
+            const label = suggestion.label.toLowerCase().substr(0, q.length)
+            return label === q.toLowerCase()
         }
     },
 
@@ -622,18 +692,31 @@ Typeahead.behaviours = {
          * value.
          */
         'setHidden': (inst, suggestion) => {
-            return '@@'
 
-            // Trigger change event against the input
+            const hiddenElm = $.one(inst._options.hiddenSelector)
+            if(suggestion === null) {
+                inst.input.value = ''
+                hiddenElm.value = ''
+            } else {
+                inst.input.value = suggestion.value
+                hiddenElm.value = suggestion.value
+            }
+
+            $.dispatch(inst.input, 'change')
         },
 
         /**
          * Set the value of the input to the suggestion's value.
          */
         'setValue': (inst, suggestion) => {
-            return '@@'
 
-            // Trigger change event against the input
+            if(suggestion === null) {
+                inst.input.value = ''
+            } else {
+                inst.input.value = suggestion.value
+            }
+
+            $.dispatch(inst.input, 'change')
         }
     },
 
@@ -661,10 +744,32 @@ Typeahead.behaviours = {
          * Sort a suggestion by startswith, then contains, then string length.
          */
         'length': (inst, q, a, b) => {
-            return false
+
+            // Compare starts vs. contains
+            const ql = q.toLowerCase()
+            const aStarts = ql === a.label.substr(0, ql.length).toLowerCase()
+            const bStarts = ql === b.label.substr(0, ql.length).toLowerCase()
+
+            if (aStarts && !bStarts) {
+                return -1
+            } else if (bStarts && !aStarts) {
+                return 1
+            }
+
+            // Compare the length of the suggestions
+            if (a.label.length > b.label.length) {
+                return 1
+            } else if (a.label.length < b.label.length) {
+                return -1
+            }
+
+            // Compare alphabetically
+            if (a.label > b.label) {
+                return 1
+            }
+            return -1
         }
     }
-
 }
 
 
@@ -693,5 +798,3 @@ Typeahead.css = {
     'typeahead': 'mh-typeahead'
 
 }
-
-// Clear button option
