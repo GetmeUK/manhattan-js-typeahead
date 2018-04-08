@@ -27,8 +27,13 @@ export class Tokenizer {
                 /**
                  * If true the tokens can be sorted.
                  */
-                'sortable': false
+                'sortable': false,
 
+                /**
+                 * If true then the tokenizer will take input directly from
+                 * the related typeahead.
+                 */
+                'typeahead': false
             },
             options,
             input,
@@ -41,7 +46,6 @@ export class Tokenizer {
         $.config(
             this._behaviours,
             {
-                'coerce': 'valueOnly',
                 'element': 'default',
                 'store': 'string'
             },
@@ -51,45 +55,129 @@ export class Tokenizer {
         )
 
         // The list of tokens currently displayed in the typeahead
-        this._tokens = null
+        this._tokens = []
 
         // Domain for related DOM elements
         this._dom = {
             'input': null,
-            'typeahead': null
+            'tokenizer': null
         }
 
         // Store a reference to the input element
         this._dom.input = input
 
         // @@ Set up event handlers
-        this._handlers = {}
+        this._handlers = {
+
+            'add': (event) => {
+                // If the event was triggered by a keydown then check the
+                // key is enter/return
+
+                // @@ If the typeahead option is set then look for the
+                // `_tokenizer` value against the input.
+
+                // @@ If not then use the value of the input
+
+                // @@ Clear the input
+
+                // @@ Add the token
+                return '@@'
+            },
+
+            'remove': (event) => {
+                const removeCSS = this.constructor.css['remove']
+                if (event.target.classList.contains(removeCSS)) {
+                    event.preventDefault()
+                    this.removeToken(event.target._token)
+                }
+            },
+
+            'sorted': (event) => {
+                // @@ Rebuild the token list from based on the new token element
+                // order
+
+                // @@ Sync the tokens
+
+                return '@@'
+            }
+        }
     }
 
     // -- Getters & Setters --
 
+    get input() {
+        return this._dom.input
+    }
+
+    get tokenizer() {
+        return this._dom.tokenizer
+    }
+
     get tokens() {
-        return this.todo
+        return this._tokens.slice()
     }
 
     // -- Public methods --
 
     addToken(token, index=null) {
-        // @@ trigger tokenadded
+        // Add the token
+        this._tokens.push(token)
+
+        // Sync the tokens
+        this._sync()
+
+        // Dispatch tokenadded event against the input
+        $.dispatch(this.input, 'tokenadded', token)
+    }
+
+    /**
+     * Remove the tokenizer.
+     */
+    destroy() {
+        return this.todo
+    }
+
+    /**
+     * Initialize the tokenizer.
+     */
+    init(tokens) {
         return this.todo
     }
 
     removeToken(token) {
-        // @@ trigger tokenremoved
-        return this.todo
+        // Remove the token
+        this._tokens = this._tokens.filter((t) => {
+            return t !== token
+        })
+
+        // Sync the tokens
+        this._sync()
+
+        // Dispatch tokenadded event against the input
+        $.dispatch(this.input, 'tokenadded', token)
     }
 
     // -- Private methods --
 
     _sync() {
-        // @@ _sync??? Sync the values in the tokens with the
-        // relevant input elements.
-        return this.todo
+        const {behaviours} = this.constructor
+
+        // Remove the existing token elements
+        const tokenElms = $.many(this.constructor['token'], this.tokenizer)
+        for (let tokenElm in tokenElms) {
+            tokenElm.parentNode.removeChild(tokenElm)
+        }
+
+        // Add the token elements
+        const element = behaviours.element[this._behaviour.element]
+        for (let token in this._tokens) {
+            const tokenElm = element(this, token)
+            tokenElm._token = token
+            this.tokenizer.appendChild(tokenElm)
+        }
+
+        // Store the value of the tokens
+        behaviours[this._behaviour.store](this)
     }
 }
 
@@ -97,32 +185,6 @@ export class Tokenizer {
 // -- Behaviours --
 
 Tokenizer.behaviours = {
-
-    /**
-     * The `coerce` behaviour is used to convert a received token into a
-     * suitable object for displaying (via `element`) and storing
-     * (via `store`).
-     */
-    'coerce': {
-
-        /**
-         * Pass-through (no coercion)
-         */
-        'passThrough': (inst, token) => {
-            return token
-        },
-
-        /**
-         * Coerce a value into a token setting both the token's label and
-         * value as the value.
-         */
-        'valueOnly': (inst, token) => {
-            return {
-                'label': token,
-                'value': token
-            }
-        }
-    },
 
     /**
      * The `element` behaviour is used to create a new element that will be
@@ -173,7 +235,27 @@ Tokenizer.behaviours = {
          * hidden field.
          */
         'inputs': (inst) => {
-            return 'todo'
+            // Find the form the associated input resides within
+            const formElm = inst.input.form
+
+            // Remove any existing hidden input fields for the tokenizer
+            const valueName = inst._options.hiddenSelector
+            const hiddenElms = $.many(`[name="${valueName}"]`, formElm)
+            for (let hiddenElm in hiddenElms) {
+                hiddenElm.parentNode.removeChild(hiddenElm)
+            }
+
+            // Add hidden elements for each token
+            for (let token in inst.token) {
+                let hiddenElm = $.create(
+                    'input',
+                    {
+                        'name': valueName,
+                        'value': token.value
+                    }
+                )
+                formElm.appendChild(hiddenElm)
+            }
         },
 
         /**
@@ -181,7 +263,10 @@ Tokenizer.behaviours = {
          * field.
          */
         'json': (inst) => {
-            return 'todo'
+            const values = inst.tokens.map((token) => {
+                return token.value
+            })
+            $.one(inst._options.hiddenSelector).value = JSON.stringify(values)
         },
 
         /**
@@ -189,7 +274,7 @@ Tokenizer.behaviours = {
          * as a UI component).
          */
         'none': (inst) => {
-            return
+            return null
         },
 
         /**
@@ -197,9 +282,11 @@ Tokenizer.behaviours = {
          * hidden field.
          */
         'string': (inst) => {
-            return 'todo'
+            const values = inst.tokens.map((token) => {
+                return token.value
+            })
+            $.one(inst._options.hiddenSelector).value = values.join(',')
         }
-
     }
 
 }
