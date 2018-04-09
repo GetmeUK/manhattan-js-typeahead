@@ -199,7 +199,10 @@ export class Typeahead {
             },
 
             'update': (event) => {
-                this._update()
+                // Get the query string
+                const {behaviours} = this.constructor
+                const q = behaviours.query[this._behaviours.query](this)
+                this.update(q)
             }
         }
     }
@@ -314,6 +317,30 @@ export class Typeahead {
     }
 
     /**
+     * Focus on the suggestion at the given index.
+     */
+    focus(index) {
+
+        // Remove the focused CSS class any suggestion element in the type
+        // ahead.
+        const focusedCSS = this.constructor.css['focused']
+        const focusedElm = $.one(`.${focusedCSS}`, this.typeahead)
+        if (focusedElm) {
+            focusedElm.classList.remove(focusedCSS)
+        }
+
+        // Update the index of the focused suggestion
+        this._index = index
+
+        // If a suggestion was given focus apply the focused CSS class to the
+        // associated suggestion element in the typeahead.
+        if (this.focused) {
+            const suggestionElm = this.typeahead.children[this.index]
+            suggestionElm.classList.add(focusedCSS)
+        }
+    }
+
+    /**
      * Initialize the typeahead.
      */
     init() {
@@ -368,18 +395,28 @@ export class Typeahead {
         // If the last suggestion currently has focus then cycle round to the
         // first suggestion.
         if (this.index >= (this.suggestionCount - 1)) {
-            this._focus(0)
+            this.focus(0)
             return
         }
 
         // Select the next suggestion
-        this._focus(this.index + 1)
+        this.focus(this.index + 1)
     }
 
     /**
      * Open the typeahead.
      */
     open() {
+        // If the typeahead is already open there's nothing to do
+        if (this.isOpen) {
+            return
+        }
+
+        // If there's no suggestions to display there's nothing to do
+        if (this.suggestionCount === 0) {
+            return
+        }
+
         // Ensure the typeahead is position inline with associated input field
         this._track()
 
@@ -392,7 +429,7 @@ export class Typeahead {
         // If the `autoFirst` option is true and no suggestion currently has
         // focus then select the first option.
         if (this._options.autoFirst && this.index === -1) {
-            this._focus(0)
+            this.focus(0)
         }
 
         // Dispatch opened event against the input
@@ -411,12 +448,12 @@ export class Typeahead {
         // If the first suggestion is currently has focus then cycle round to
         // the first suggestion.
         if (this.index <= 0) {
-            this._focus(this.suggestionCount - 1)
+            this.focus(this.suggestionCount - 1)
             return
         }
 
         // Select the previous suggestion
-        this._focus(this.index - 1)
+        this.focus(this.index - 1)
     }
 
     /**
@@ -428,7 +465,7 @@ export class Typeahead {
         // If an index is given (and it's not the the same as the current
         // index then select it).
         if (index !== null && index !== this.index) {
-            this._focus(index)
+            this.focus(index)
         }
 
         // Check that a suggestion has focus
@@ -455,49 +492,11 @@ export class Typeahead {
         $.dispatch(this.input, 'selected', {suggestion})
     }
 
-    // -- Private methods --
 
     /**
-     * Focus on the suggestion at the given index.
+     * Update the typeahead to show relevant suggestions for the given query.
      */
-    _focus(index) {
-
-        // Remove the focused CSS class any suggestion element in the type
-        // ahead.
-        const focusedCSS = this.constructor.css['focused']
-        const focusedElm = $.one(`.${focusedCSS}`, this.typeahead)
-        if (focusedElm) {
-            focusedElm.classList.remove(focusedCSS)
-        }
-
-        // Update the index of the focused suggestion
-        this._index = index
-
-        // If a suggestion was given focus apply the focused CSS class to the
-        // associated suggestion element in the typeahead.
-        if (this.focused) {
-            const suggestionElm = this.typeahead.children[this.index]
-            suggestionElm.classList.add(focusedCSS)
-        }
-    }
-
-    /**
-     * Position the typehead inline with the associated input element.
-     */
-    _track() {
-        const rect = this.input.getBoundingClientRect()
-        const top = rect.top + window.pageYOffset
-        const left = rect.left + window.pageXOffset
-        this.typeahead.style.top = `${top + rect.height}px`
-        this.typeahead.style.left = `${left}px`
-        this.typeahead.style.width = `${rect.width}px`
-    }
-
-    /**
-     * Update the typeahead to show relevant suggestions for the current
-     * query.
-     */
-    _update() {
+    update(q) {
         const {behaviours} = this.constructor
 
         // Clear all current suggestions and associated elements
@@ -507,9 +506,6 @@ export class Typeahead {
             this.typeahead.removeChild(this.typeahead.firstChild)
         }
 
-        // Get the query string
-        const q = behaviours.query[this._behaviours.query](this)
-
         // If there's no query string then clear the current input field's
         // value.
         if (q.length === 0) {
@@ -517,14 +513,14 @@ export class Typeahead {
         }
 
         // If the query string is shorter than the minumum number of
-        // characters required the we close the typeahead and we're done.
+        // characters required then we close the typeahead and we're done.
         if (q.length < this._options.minChars) {
             this.close()
-            return
+            return null
         }
 
         // Fetch the list of suggestions
-        behaviours.fetch[this._behaviours.fetch](this, q)
+        return behaviours.fetch[this._behaviours.fetch](this, q)
             .then((rawSuggestions) => {
 
                 // If no suggestions were returned then close the typeahead
@@ -581,6 +577,20 @@ export class Typeahead {
                 // typeahead and we're done.
                 this.close()
             })
+    }
+
+    // -- Private methods --
+
+    /**
+     * Position the typehead inline with the associated input element.
+     */
+    _track() {
+        const rect = this.input.getBoundingClientRect()
+        const top = rect.top + window.pageYOffset
+        const left = rect.left + window.pageXOffset
+        this.typeahead.style.top = `${top + rect.height}px`
+        this.typeahead.style.left = `${left}px`
+        this.typeahead.style.width = `${rect.width}px`
     }
 }
 
