@@ -7,7 +7,8 @@ module.exports = {
     },
 
     externals: {
-        'manhattan-essentials': 'manhattan-essentials'
+        'manhattan-essentials': 'manhattan-essentials',
+        'manhattan-sortable': 'manhattan-sortable'
     },
 
     output: {

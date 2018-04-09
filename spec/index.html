@@ -7,31 +7,53 @@
             type="text/css"
             href="typeahead.css"
             >
+        <link
+            rel="stylesheet"
+            type="text/css"
+            href="tokenizer.css"
+            >
     </head>
     <body>
-        <label>
-            Language
-            <input
-                name="language"
-                value=""
-                data-mh-typeahead
-                data-mh-typeahead--coerce="valueOnly"
-                data-mh-typeahead--fetch="json"
-                data-mh-typeahead--list='[
-                    "Ada",
-                    "Java",
-                    "JavaScript",
-                    "SQL",
-                    "C++",
-                    "C#",
-                    "Python",
-                    "PHP",
-                    "Ruby"
-                ]'
-                >
-        </label>
+        <div>
+            <label>
+                Language
+                <input
+                    name="language"
+                    value=""
+                    data-mh-typeahead
+                    data-mh-typeahead--coerce="valueOnly"
+                    data-mh-typeahead--fetch="json"
+                    data-mh-typeahead--list='[
+                        "Ada",
+                        "Java",
+                        "JavaScript",
+                        "SQL",
+                        "C++",
+                        "C#",
+                        "Python",
+                        "PHP",
+                        "Ruby"
+                    ]'
+                    >
+            </label>
+        </div>
+
+        <div>
+            <label>
+                Tags
+                <input
+                    name="tags_in"
+                    value=""
+                    data-mh-tokenizer
+                    data-mh-tokenizer--hidden-selector="[name=tags]"
+                    data-mh-tokenizer--sortable
+                    >
+                <input type="hidden" name="tags">
+            </label>
+        </div>
 
         <script src="../node_modules/manhattan-essentials/umd/index.js"></script>
+        <script src="../node_modules/manhattan-sortable/umd/index.js"></script>
         <script src="../umd/index.js"></script>
         <script>
 
@@ -41,9 +63,21 @@
                 .typeahead
                 .Typeahead
 
+            const Tokenizer = window['manhattan-typeahead']
+                .tokenizer
+                .Tokenizer
+
             for(let fieldElm of $.many('[data-mh-typeahead]')) {
                 let t = new Typeahead(fieldElm)
                 t.init()
+            }
+
+            for(let fieldElm of $.many('[data-mh-tokenizer]')) {
+                let t = new Tokenizer(fieldElm)
+                t.init([
+                    {'label': 'test1', 'value': 'test1'},
+                    {'label': 'test2', 'value': 'test2'}
+                ])
             }
 
         </script>

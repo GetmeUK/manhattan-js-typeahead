@@ -1,5 +1,5 @@
 import * as $ from 'manhattan-essentials'
-
+import {Sortable} from 'manhattan-sortable'
 
 /**
  * Tokenizer UI component for form fields.
@@ -16,13 +16,19 @@ export class Tokenizer {
             {
 
                 /**
+                 * If true then a tag with the same value can be added
+                 * multiple times.
+                 */
+                'allowDuplicates': false,
+
+                /**
                  * A CSS selector used with the `store` behaviours to select a
                  * hidden input field to populate when storing token values.
                  *
                  * In the case of the `inputs` behaviour it should contain the
                  * name of the hidden field(s) to be created.
                  */
-                'hiddenSelector': false,
+                'hiddenSelector': '',
 
                 /**
                  * If true the tokens can be sorted.
@@ -47,7 +53,8 @@ export class Tokenizer {
             this._behaviours,
             {
                 'element': 'default',
-                'store': 'string'
+                'store': 'string',
+                'tokenizer': 'default'
             },
             options,
             input,
@@ -66,39 +73,72 @@ export class Tokenizer {
         // Store a reference to the input element
         this._dom.input = input
 
-        // @@ Set up event handlers
+        // Set up event handlers
         this._handlers = {
 
             'add': (event) => {
                 // If the event was triggered by a keydown then check the
-                // key is enter/return
+                // key is enter.
+                if (event.type === 'keydown' && event.keyCode !== 13) {
+                    return
+                }
 
-                // @@ If the typeahead option is set then look for the
-                // `_tokenizer` value against the input.
+                // Get the value to add to the tokenizer
+                let token = null
+                if (this._options.typeahead) {
 
-                // @@ If not then use the value of the input
+                    // If the typeahead option is set then look for the
+                    // `_token` value against the input.
+                    if (this.input._token) {
+                        token = this.input._token
+                    }
 
-                // @@ Clear the input
+                } else {
+                    // If not then check for a value in the input
+                    const value = this.input.value.trim()
 
-                // @@ Add the token
-                return '@@'
-            },
+                    if (value !== '') {
+                        token = {
+                            'label': value,
+                            value
+                        }
+                    }
+                }
 
-            'remove': (event) => {
-                const removeCSS = this.constructor.css['remove']
-                if (event.target.classList.contains(removeCSS)) {
-                    event.preventDefault()
-                    this.removeToken(event.target._token)
+                // Clear the input
+                this.input.value = ''
+
+                // If a token was extracted then add it
+                if (token !== null) {
+                    this.addToken(token)
                 }
             },
 
-            'sorted': (event) => {
-                // @@ Rebuild the token list from based on the new token element
-                // order
+            'remove': (event) => {
+                const {css} = this.constructor
+                if (event.target.classList.contains(css['remove'])) {
+                    event.preventDefault()
+                    const tokenElm = $.closest(
+                        event.target,
+                        `.${css['token']}`
+                    )
+                    this.removeToken(tokenElm._token)
+                }
+            },
 
-                // @@ Sync the tokens
+            'sort': (event) => {
+                // Rebuild the token list from based on the new token element
+                // order.
+                const tokenElms = $.many(
+                    `.${this.constructor.css['token']}`,
+                    this.tokenizer
+                )
+                this._tokens = tokenElms.map((tokenElm) => {
+                    return tokenElm._token
+                })
 
-                return '@@'
+                // Sync the tokens
+                this._sync()
             }
         }
     }
@@ -120,6 +160,16 @@ export class Tokenizer {
     // -- Public methods --
 
     addToken(token, index=null) {
+        // If duplicates are not allowed then first check to make sure the
+        // token has not already been added.
+        if (!this._options.allowDuplicates) {
+            for (let otherToken of this._tokens) {
+                if (token.value === otherToken.value) {
+                    return
+                }
+            }
+        }
+
         // Add the token
         this._tokens.push(token)
 
@@ -141,7 +191,38 @@ export class Tokenizer {
      * Initialize the tokenizer.
      */
     init(tokens) {
-        return this.todo
+        // Store a reference to the tokenizer instance against the input
+        this.input._mhTokenizer = this
+
+        // Create the tokenizer element
+        const cls = this.constructor
+        const tokenizer = cls.behaviours.tokenizer[this._behaviours.tokenizer]
+        this._dom.tokenizer = tokenizer(this)
+
+        // Set up sort behaviour
+        if (this._options.sortable) {
+            this._sortable = new Sortable(this.tokenizer)
+            this._sortable.init()
+        }
+
+        // Set up event listeners
+        $.listen(
+            this.input,
+            {'keydown': this._handlers.add}
+        )
+
+        // Set up event listeners
+        $.listen(
+            this.tokenizer,
+            {
+                'click': this._handlers.remove,
+                'sorted': this._handlers.sort
+            }
+        )
+
+        // Set the initial set of tokens
+        this._tokens = tokens
+        this._sync()
     }
 
     removeToken(token) {
@@ -163,21 +244,24 @@ export class Tokenizer {
         const {behaviours} = this.constructor
 
         // Remove the existing token elements
-        const tokenElms = $.many(this.constructor['token'], this.tokenizer)
-        for (let tokenElm in tokenElms) {
+        const tokenElms = $.many(
+            `.${this.constructor.css['token']}`,
+            this.tokenizer
+        )
+        for (let tokenElm of tokenElms) {
             tokenElm.parentNode.removeChild(tokenElm)
         }
 
         // Add the token elements
-        const element = behaviours.element[this._behaviour.element]
-        for (let token in this._tokens) {
+        const element = behaviours.element[this._behaviours.element]
+        for (let token of this._tokens) {
             const tokenElm = element(this, token)
             tokenElm._token = token
             this.tokenizer.appendChild(tokenElm)
         }
 
         // Store the value of the tokens
-        behaviours[this._behaviour.store](this)
+        behaviours.store[this._behaviours.store](this)
     }
 }
 
@@ -241,12 +325,12 @@ Tokenizer.behaviours = {
             // Remove any existing hidden input fields for the tokenizer
             const valueName = inst._options.hiddenSelector
             const hiddenElms = $.many(`[name="${valueName}"]`, formElm)
-            for (let hiddenElm in hiddenElms) {
+            for (let hiddenElm of hiddenElms) {
                 hiddenElm.parentNode.removeChild(hiddenElm)
             }
 
             // Add hidden elements for each token
-            for (let token in inst.token) {
+            for (let token of inst.token) {
                 let hiddenElm = $.create(
                     'input',
                     {
@@ -285,7 +369,35 @@ Tokenizer.behaviours = {
             const values = inst.tokens.map((token) => {
                 return token.value
             })
+
             $.one(inst._options.hiddenSelector).value = values.join(',')
+        }
+    },
+
+    /**
+     * The `tokenizer` behaviour is used to return an elemnt to display the
+     * tokens in. The behaviour can return a reference to an existing
+     * element or create, insert and return a new element.
+     */
+    'tokenizer': {
+
+        /**
+         * The default behaviour creates a new div element and inserts it into
+         * the the DOM after the input field.
+         */
+        'default': (inst) => {
+
+            // Create a tokenizer element
+            const cls = inst.constructor
+            const tokenizer = $.create('div', {'class': cls.css['tokenizer']})
+
+            // Insert the tokenizer after the input
+            inst.input.parentNode.insertBefore(
+                tokenizer,
+                inst.input.nextSibling
+            )
+
+            return tokenizer
         }
     }
 

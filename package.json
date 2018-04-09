@@ -68,6 +68,7 @@
     "webpack-cli": "^2.0.9"
   },
   "dependencies": {
-    "manhattan-essentials": "^1.0.0"
+    "manhattan-essentials": "^1.0.0",
+    "manhattan-sortable": "^1.0.2"
   }
 }

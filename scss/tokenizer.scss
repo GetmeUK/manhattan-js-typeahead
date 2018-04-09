@@ -1,0 +1,26 @@
+.mh-tokenizer {
+    margin-top: 10px;
+
+    .mh-token {
+        background: #eff2f4;
+        display: inline-block;
+        margin-right: 10px;
+        padding: 10px 20px;
+        width: auto;
+
+        &__label {
+            display: inline-block;
+        }
+
+        &__remove {
+            background: #f00;
+            border-radius: 10px;
+            cursor: pointer;
+            display: inline-block;
+            height: 20px;
+            margin-left: 10px;
+            width: 20px;
+        }
+    }
+
+}
