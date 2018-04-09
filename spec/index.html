@@ -18,11 +18,13 @@
             <label>
                 Language
                 <input
-                    name="language"
+                    name="languages_input"
                     value=""
                     data-mh-typeahead
+                    data-mh-typeahead--auto-first
                     data-mh-typeahead--coerce="valueOnly"
                     data-mh-typeahead--fetch="json"
+                    data-mh-typeahead--input="tokenizer"
                     data-mh-typeahead--list='[
                         "Ada",
                         "Java",
@@ -34,7 +36,13 @@
                         "PHP",
                         "Ruby"
                     ]'
+                    data-mh-typeahead--must-match
+                    data-mh-tokenizer
+                    data-mh-tokenizer--hidden-selector="[name=languages]"
+                    data-mh-tokenizer--sortable
+                    data-mh-tokenizer--typeahead
                     >
+                <input type="hidden" name="languages">
             </label>
         </div>
 
@@ -42,7 +50,7 @@
             <label>
                 Tags
                 <input
-                    name="tags_in"
+                    name="tags_input"
                     value=""
                     data-mh-tokenizer
                     data-mh-tokenizer--hidden-selector="[name=tags]"
@@ -74,10 +82,7 @@
 
             for(let fieldElm of $.many('[data-mh-tokenizer]')) {
                 let t = new Tokenizer(fieldElm)
-                t.init([
-                    {'label': 'test1', 'value': 'test1'},
-                    {'label': 'test2', 'value': 'test2'}
-                ])
+                t.init()
             }
 
         </script>

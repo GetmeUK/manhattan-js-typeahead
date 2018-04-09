@@ -1,6 +1,7 @@
 import * as $ from 'manhattan-essentials'
 import {Sortable} from 'manhattan-sortable'
 
+
 /**
  * Tokenizer UI component for form fields.
  */
@@ -61,7 +62,10 @@ export class Tokenizer {
             prefix
         )
 
-        // The list of tokens currently displayed in the typeahead
+        // Handle to the Sortable instance if the tokenizer supports sorting
+        this._sortable = null
+
+        // The list of tokens currently displayed in the tokenizer
         this._tokens = []
 
         // Domain for related DOM elements
@@ -91,6 +95,7 @@ export class Tokenizer {
                     // `_token` value against the input.
                     if (this.input._token) {
                         token = this.input._token
+                        delete this.input._token
                     }
 
                 } else {
@@ -184,7 +189,36 @@ export class Tokenizer {
      * Remove the tokenizer.
      */
     destroy() {
-        return this.todo
+        // Remove event listeners
+        $.ignore(
+            this.input,
+            {
+                'keydown': this._handlers.add,
+                'selected': this._handlers.add
+            }
+        )
+
+        if (this.tokenizer) {
+            $.ignore(
+                this.tokenizer,
+                {
+                    'click': this._handlers.remove,
+                    'sorted': this._handlers.sort
+                }
+            )
+
+            // Clear the tokens
+            this._tokens = []
+
+            // Remove the element
+            document.body.removeChild(this.tokenizer)
+        }
+
+        if (this._sortable !== null) {
+            // Remove any sortable behaviour
+            this._sortable.destroy()
+            this._sortable = null
+        }
     }
 
     /**
@@ -201,17 +235,25 @@ export class Tokenizer {
 
         // Set up sort behaviour
         if (this._options.sortable) {
-            this._sortable = new Sortable(this.tokenizer)
+            this._sortable = new Sortable(
+                this.tokenizer,
+                {
+                    'grabSelector': `.${this.constructor.css['label']}`,
+                    'grabber': 'selector'
+                }
+            )
             this._sortable.init()
         }
 
         // Set up event listeners
         $.listen(
             this.input,
-            {'keydown': this._handlers.add}
+            {
+                'keydown': this._handlers.add,
+                'selected': this._handlers.add
+            }
         )
 
-        // Set up event listeners
         $.listen(
             this.tokenizer,
             {
@@ -221,7 +263,7 @@ export class Tokenizer {
         )
 
         // Set the initial set of tokens
-        this._tokens = tokens
+        this._tokens = tokens || []
         this._sync()
     }
 

@@ -142,6 +142,8 @@ export class Typeahead {
                     if (this.index > -1) {
                         event.preventDefault()
                         this.select()
+                    } else {
+                        this.close()
                     }
                     break
 
@@ -805,6 +807,20 @@ Typeahead.behaviours = {
                 inst.input.value = ''
             } else {
                 inst.input.value = suggestion.value
+            }
+
+            $.dispatch(inst.input, 'change')
+        },
+
+        /**
+         * Sets the suggestion against a private attribute of the input that
+         * the tokenizer component knows to look for. Use this behaviour to
+         * integrate the typeahead with a tokenizer.
+         */
+        'tokenizer': (inst, suggestion) => {
+
+            if(suggestion !== null) {
+                inst.input._token = suggestion
             }
 
             $.dispatch(inst.input, 'change')

@@ -1,26 +1,56 @@
 .mh-tokenizer {
+    color: #666;
+    font-family: sans-serif;
+    font-size: 15px;
     margin-top: 10px;
+}
 
-    .mh-token {
-        background: #eff2f4;
-        display: inline-block;
-        margin-right: 10px;
-        padding: 10px 20px;
-        width: auto;
+.mh-token {
+    background: #eff2f4;
+    display: inline-block;
+    margin-right: 10px;
+    position: relative;
+    width: auto;
 
-        &__label {
-            display: inline-block;
-        }
-
-        &__remove {
-            background: #f00;
-            border-radius: 10px;
-            cursor: pointer;
-            display: inline-block;
-            height: 20px;
-            margin-left: 10px;
-            width: 20px;
-        }
+    &__label {
+        display: block;
+        height: 32px;
+        line-height: 32px;
+        padding: 0 40px 0 16px;
     }
 
+    &__remove {
+        background: rgba(#000, 0.1);
+        border-radius: 12px;
+        cursor: pointer;
+        display: block;
+        height: 20px;
+        position: absolute;
+        right: 8px;
+        top: 6px;
+        width: 20px;
+
+        &:hover {
+            background: rgba(#000, 0.2);
+        }
+
+        &:before,
+        &:after {
+            background: #666;
+            content: ' ';
+            height: 11px;
+            left: 9px;
+            position: absolute;
+            top: 4px;
+            width: 2px;
+        }
+
+        &:before {
+            transform: rotate(45deg);
+        }
+
+        &:after {
+            transform: rotate(-45deg);
+        }
+    }
 }
