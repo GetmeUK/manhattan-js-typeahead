@@ -13,14 +13,19 @@ chai.use(require('sinon-chai'))
 describe('Typeahead', () => {
 
     let inputElm = null
+    let otherInputElm = null
 
     beforeEach(() => {
         inputElm = $.create('input')
         document.body.appendChild(inputElm)
+
+        otherInputElm = $.create('input')
+        document.body.appendChild(otherInputElm)
     })
 
     afterEach(() => {
         document.body.removeChild(inputElm)
+        document.body.removeChild(otherInputElm)
     })
 
     describe('constructor', () => {
@@ -131,4 +136,72 @@ describe('Typeahead', () => {
             })
         })
     })
+
+    describe('public methods', () => {
+        let typeahead = null
+
+        beforeEach(() => {
+            typeahead = new Typeahead(
+                inputElm,
+                {
+                    'coerce': 'valueOnly',
+                    'list': ['foo', 'bar']
+                }
+            )
+            typeahead.init()
+        })
+
+        afterEach(() => {
+            typeahead.destroy()
+        })
+
+        describe('clear', () => {
+            it('should clear any value from the typeahead', async () => {
+
+                // Set a value
+                await typeahead.update('fo')
+                typeahead.select(0)
+
+                // Clear it
+                typeahead.clear()
+                inputElm.value.should.equal('')
+
+            })
+        })
+
+        describe('clearCache', () => {
+            it('should clear any internal cache', () => {
+
+                // Populate the cache (for the sake of simplicity we do this
+                // manually).
+                typeahead._cache = {'foo': 'bar'}
+
+                // Clear the cache
+                typeahead.clearCache()
+                typeahead._cache.should.deep.equal({})
+
+            })
+        })
+
+        describe('close', () => {
+            it('should close the typeahead and trigger a closed '
+                + 'event', () => {
+
+            })
+
+            it('should do nothing if the typeahead is already closed', () => {
+
+            })
+        })
+
+    })
 })
+
+// destroy
+// focus
+// init
+// next
+// open
+// previous
+// select
+// update
