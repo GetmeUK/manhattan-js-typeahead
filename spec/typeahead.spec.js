@@ -657,7 +657,6 @@ describe('Typeahead', () => {
         })
     })
 
-
     describe('private methods', () => {
         let typeahead = null
 
@@ -693,6 +692,46 @@ describe('Typeahead', () => {
                 typeahead.typeahead.style.width.should.equal('100px')
             })
 
+        })
+    })
+
+    describe('behaviours > coerce', () => {
+        const behaviours = Typeahead.behaviours.coerce
+        let typeahead = null
+
+        beforeEach(() => {
+            typeahead = new Typeahead(inputElm)
+            typeahead.init()
+        })
+
+        afterEach(() => {
+            typeahead.destroy()
+        })
+
+        describe('passThrough', () => {
+            it('should return the suggestion passed uncoerced', () => {
+                const suggestion = {
+                    'label': 'foo',
+                    'value': 'foo'
+                }
+                behaviours.passThrough(typeahead, suggestion)
+                    .should
+                    .equal(suggestion)
+            })
+        })
+
+        describe('valueOnly', () => {
+            it('should return the value passed coerced to a suggestion '
+                + 'object', () => {
+
+                behaviours.valueOnly(typeahead, 'foo')
+                    .should
+                    .deep
+                    .equal({
+                        'label': 'foo',
+                        'value': 'foo'
+                    })
+            })
         })
     })
 })
