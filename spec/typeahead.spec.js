@@ -254,7 +254,6 @@ describe('Typeahead', () => {
                     .length
                     .should
                     .equal(0)
-                console.log(typeahead.typeahead)
                 chai.expect(typeahead.typeahead).to.be.null
 
                 // The reference to the typeahead should have been removed 
@@ -462,8 +461,7 @@ describe('Typeahead', () => {
 
             })
 
-            it('should do nothing if the typeahead is already '
-                + 'open', async () => {
+            it('should do nothing if the typeahead is already open', () => {
 
                 const onOpened = sinon.spy()
                 $.listen(inputElm, {'opened': onOpened})
@@ -608,18 +606,16 @@ describe('Typeahead', () => {
                 await otherTypeahead.update('fo')
                 
                 otherTypeahead.suggestionCount.should.equal(2)
-                otherTypeahead.suggestions.should.deep.equal(
-                    [
-                        {
-                            'label': 'foo',
-                            'value': 'foo'
-                        },
-                        {
-                            'label': 'foobar',
-                            'value': 'foobar'
-                        }
-                    ]
-                )
+                otherTypeahead.suggestions.should.deep.equal([
+                    {
+                        'label': 'foo',
+                        'value': 'foo'
+                    },
+                    {
+                        'label': 'foobar',
+                        'value': 'foobar'
+                    }
+                ])
                 otherTypeahead.typeahead.children.length.should.equal(2)
 
             })
