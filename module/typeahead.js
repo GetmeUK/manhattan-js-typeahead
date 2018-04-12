@@ -296,9 +296,8 @@ export class Typeahead {
             this.input,
             {
                 'blur': this._handlers.close,
-                'change': this._handlers.input,
-                'click': this._handlers.open,
-                'focus': this._handlers.open
+                'input': this._handlers.update,
+                'keydown': this._handlers.nav
             }
         )
 
@@ -310,10 +309,14 @@ export class Typeahead {
 
             // Remove the element
             document.body.removeChild(this.typeahead)
+            this._dom.typeahead = null
         }
 
+        // Clear suggestions
+        this._suggestions = null
+
         // Remove the typeahead reference from the input
-        delete this._dom.input._mhDatePicker
+        delete this._dom.input._mhTypeahead
     }
 
     /**
@@ -331,7 +334,7 @@ export class Typeahead {
 
         // Update the index of the focused suggestion
         this._index = index
-
+        
         // If a suggestion was given focus apply the focused CSS class to the
         // associated suggestion element in the typeahead.
         if (this.focused) {
@@ -346,6 +349,9 @@ export class Typeahead {
     init() {
         // Store a reference to the typeahead instance against the input
         this.input._mhTypeahead = this
+
+        // Set the suggestions to an empty list
+        this._suggestions = []
 
         // Prevent autocomplete behaviour against the input
         this.input.setAttribute('autocomplete', 'off')
