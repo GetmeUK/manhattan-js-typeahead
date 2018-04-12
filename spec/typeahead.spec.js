@@ -521,23 +521,178 @@ describe('Typeahead', () => {
             it('should tigger a select and selected event against the ' 
                 + 'input', async () => {
 
+                const onSelect = sinon.spy()
+                const onSelected = sinon.spy()
+                $.listen(inputElm, {'select': onSelect})
+                $.listen(inputElm, {'selected': onSelected})
+
                 await typeahead.update('fo')
 
+                typeahead.select(0)
+
+                onSelect.should.have.been.called
+                onSelect.getCall(0)
+                    .args[0]
+                    .suggestion
+                    .value
+                    .should
+                    .equal('foo')
+
+                onSelected.should.have.been.called
+                onSelected.getCall(0)
+                    .args[0]
+                    .suggestion
+                    .value
+                    .should
+                    .equal('foo')
+
+                inputElm.value.should.equal('foo')
             })
 
             it('should not attempt to set an input value if the select ' 
                 + 'event is cancelled', async () => {
 
+                $.listen(
+                    inputElm, 
+                    {
+                        'select': (event) => {
+                            event.preventDefault()
+                        }
+                    }
+                )
+
+                const onSelected = sinon.spy()
+                $.listen(inputElm, {'selected': onSelected})
+
                 await typeahead.update('fo')
 
+                typeahead.select(0)
+
+                onSelected.should.not.have.been.called
+
+                inputElm.value.should.equal('')
             })
             
             it('should close the typeahead', async () => {
                 await typeahead.update('fo')
+                
+                typeahead.open()
+                typeahead.select(0)
+
+                typeahead.isOpen.should.be.false
+            })
+        })
+
+        describe('update', () => {
+
+            let otherTypeahead = null
+
+            beforeEach(() => {
+                otherTypeahead = new Typeahead(
+                    inputElm,
+                    {
+                        'coerce': 'valueOnly',
+                        'list': ['foo', 'foobar', 'bar']
+                    }
+                )
+                otherTypeahead.init()
+            })
+
+            afterEach(() => {
+                otherTypeahead.destroy()
+            })
+
+            it('should populate the typeahead with suggestions that '
+                + 'match the query string', async () => {
+
+                await otherTypeahead.update('fo')
+                
+                otherTypeahead.suggestionCount.should.equal(2)
+                otherTypeahead.suggestions.should.deep.equal(
+                    [
+                        {
+                            'label': 'foo',
+                            'value': 'foo'
+                        },
+                        {
+                            'label': 'foobar',
+                            'value': 'foobar'
+                        }
+                    ]
+                )
+                otherTypeahead.typeahead.children.length.should.equal(2)
+
+            })
+
+            it('should clear existing suggestions', async () => {
+
+                await otherTypeahead.update('fo')                
+                await otherTypeahead.update('xy')
+
+                otherTypeahead.suggestionCount.should.equal(0)
+                otherTypeahead.typeahead.children.length.should.equal(0)
+
+            })
+
+            it('should clear the input value if the query string is ' 
+                + 'empty', async () => {
+
+                inputElm.value = 'some value'
+                await otherTypeahead.update('')
+                inputElm.value.should.equal('')
+
+            })
+
+            it('should close without fetching suggestions if the query' 
+                + 'string is shorter than the minChar option', async () => {
+
+                await otherTypeahead.update('fo')
+                await otherTypeahead.open()
+                await otherTypeahead.update('f')
+                
+                otherTypeahead.suggestionCount.should.equal(0)
+                otherTypeahead.isOpen.should.be.false
 
             })
         })
     })
-})
 
-// update
+
+    describe('private methods', () => {
+        let typeahead = null
+
+        beforeEach(() => {
+            typeahead = new Typeahead(inputElm)
+            typeahead.init()
+
+            inputElm.getBoundingClientRect = () => {
+                return {
+                    'bottom': 40,
+                    'height': 20,
+                    'left': 30,
+                    'right': 130,
+                    'top': 20,
+                    'width': 100
+                }
+            }
+
+            window.pageXOffset = 10
+            window.pageYOffset = 10
+        })
+
+        afterEach(() => {
+            typeahead.destroy()
+        })
+
+        describe('track', () => {
+
+            it('should position the typeahead inline with the input', () => {
+                typeahead._track()
+                typeahead.typeahead.style.top.should.equal('50px')
+                typeahead.typeahead.style.left.should.equal('40px')
+                typeahead.typeahead.style.width.should.equal('100px')
+            })
+
+        })
+    })
+})
