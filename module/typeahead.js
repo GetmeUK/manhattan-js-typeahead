@@ -312,6 +312,9 @@ export class Typeahead {
             this._dom.typeahead = null
         }
 
+        // Clear the cache
+        this.clearCache()
+
         // Clear suggestions
         this._suggestions = null
 
@@ -352,6 +355,9 @@ export class Typeahead {
 
         // Set the suggestions to an empty list
         this._suggestions = []
+
+        // Initially clear the cache
+        this.clearCache()
 
         // Prevent autocomplete behaviour against the input
         this.input.setAttribute('autocomplete', 'off')
@@ -693,9 +699,9 @@ Typeahead.behaviours = {
                 })
                 .then((json) => {
                     if (!inst._options.disableCache) {
-                        inst._cache[cacheKey] = json.payload.items
+                        inst._cache[cacheKey] = json.payload.suggestions
                     }
-                    return json.payload.items
+                    return json.payload.suggestions
                 })
         },
 
@@ -705,25 +711,6 @@ Typeahead.behaviours = {
         'array': (inst, q) => {
             return new Promise((resolve, reject) => {
                 resolve(inst._options.list)
-            })
-        },
-
-        /**
-         * Select a <datalist> element using the list option as a CSS selector
-         * and return its options as suggestions.
-         */
-        'dataList': (inst, q) => {
-            return new Promise((resolve, reject) => {
-
-                const elms = $.many('option', inst._options.list)
-                const suggestions = elms.map((elm) => {
-                    return {
-                        'label': (elm.textContent || elm.value || '').trim(),
-                        'value': (elm.value || elm.textContent || '').trim()
-                    }
-                })
-                resolve(suggestions)
-
             })
         },
 
@@ -761,7 +748,7 @@ Typeahead.behaviours = {
          */
         'string': (inst, q) => {
             return new Promise((resolve, reject) => {
-                resolve(inst._options.split(','))
+                resolve(inst._options.list.split(','))
             })
         }
 

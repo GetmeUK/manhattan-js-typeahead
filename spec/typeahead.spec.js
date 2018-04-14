@@ -730,4 +730,355 @@ describe('Typeahead', () => {
             })
         })
     })
+
+    describe('element', () => {
+        const behaviours = Typeahead.behaviours.element
+        let typeahead = null
+        let suggestion = null
+
+        beforeEach(() => {
+            typeahead = new Typeahead(inputElm)
+            typeahead.init()
+
+            suggestion = {
+                'label': 'Foo',
+                'value': 'foo'
+            }
+        })
+
+        afterEach(() => {
+            typeahead.destroy()
+        })
+
+        describe('default', () => {
+            it('it should return an elemnet containing the suggestion with '
+                + 'the matching part of the label marked', () => {
+
+                const elm = behaviours.default(typeahead, suggestion, 'fo')
+                elm.outerHTML.should.equal(
+                    '<div class="mh-typeahead__suggestion">' + 
+                        '<mark>Fo</mark>o' +
+                    '</div>'
+                )
+
+            })
+        })
+    })
+
+    describe('fetch', () => {
+        const behaviours = Typeahead.behaviours.fetch
+        let typeahead = null
+
+        afterEach(() => {
+            if (typeahead) {
+                typeahead.destroy()
+            }
+        })
+
+        describe('ajax', () => {
+
+            beforeEach(() => {
+                global.fetch = () => {
+                    return Promise.resolve(
+                        {
+                            'json': () => {
+                                return {
+                                    'payload': {
+                                        'suggestions': [
+                                            {
+                                                'label': 'foo',
+                                                'value': 'foo'
+                                            },
+                                            {
+                                                'label': 'foobar',
+                                                'value': 'foobar'
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    )
+                }
+
+                sinon.spy(global, 'fetch')
+            })
+
+            it('it should return a list of suggestions from a remote '
+                + 'url', async () => {
+
+                typeahead = new Typeahead(
+                    inputElm,
+                    {'list': '/some-url'}
+                )
+                typeahead.init()
+
+                // With no args
+                const suggestions = await behaviours.ajax(typeahead, 'fo')
+                suggestions.should.deep.equal(
+                    [
+                        {
+                            'label': 'foo',
+                            'value': 'foo'
+                        },
+                        {
+                            'label': 'foobar',
+                            'value': 'foobar'
+                        }
+                    ]
+                )
+            })
+
+            it('it should return a list of suggestions from a remote '
+                + 'url with args', async () => {
+
+                typeahead = new Typeahead(
+                    inputElm,
+                    {'list': '/some-url?testing=123'}
+                )
+                typeahead.init()
+
+                // With args
+                const suggestions = await behaviours.ajax(typeahead, 'fo')
+                suggestions.should.deep.equal(
+                    [
+                        {
+                            'label': 'foo',
+                            'value': 'foo'
+                        },
+                        {
+                            'label': 'foobar',
+                            'value': 'foobar'
+                        }
+                    ]
+                )
+
+                global.fetch
+                    .should
+                    .have
+                    .been
+                    .calledWith('/some-url?testing=123&q=fo')
+            })
+
+            it('it should use a cached version if available and the cache '
+                + 'is not disabled', async () => {
+
+                typeahead = new Typeahead(
+                    inputElm,
+                    {'list': '/some-url'}
+                )
+                typeahead.init()
+
+                await behaviours.ajax(typeahead, 'fo')
+                await behaviours.ajax(typeahead, 'fo')
+                
+                global.fetch.should.have.been.calledOnce
+            })
+
+            it('it should not use the cache if the cache is disabled', 
+                async () => {
+
+                typeahead = new Typeahead(
+                    inputElm,
+                    {
+                        'disableCache': true, 
+                        'list': '/some-url'
+                    }
+                )
+                typeahead.init()
+
+                await behaviours.ajax(typeahead, 'fo')
+                await behaviours.ajax(typeahead, 'fo')
+                               
+                global.fetch.should.have.been.calledTwice
+
+            })
+        })
+
+        describe('array', () => {
+            it('it should return a list of suggestions from an array', 
+                async () => {
+
+                typeahead = new Typeahead(
+                    inputElm,
+                    {
+                        'list': [
+                            {
+                                'label': 'foo',
+                                'value': 'foo'
+                            },
+                            {
+                                'label': 'foobar',
+                                'value': 'foobar'
+                            }
+                        ]
+                    }
+                )
+                typeahead.init()
+
+                const suggestions = await behaviours.array(typeahead, 'fo')
+                suggestions.should.deep.equal(
+                    [
+                        {
+                            'label': 'foo',
+                            'value': 'foo'
+                        },
+                        {
+                            'label': 'foobar',
+                            'value': 'foobar'
+                        }
+                    ]
+                )
+            })
+        })
+
+        describe('elements', () => {
+            let ulElm = null
+
+            beforeEach(() => {
+                ulElm = $.create('ul', {'class': 'suggestions'})
+                document.body.appendChild(ulElm)
+
+                const inputElm1 = $.create('li')
+                inputElm1.textContent = 'foo'
+                const inputElm2 = $.create('li')
+                inputElm2.textContent = 'foobar'
+
+                ulElm.appendChild(inputElm1)
+                ulElm.appendChild(inputElm2)
+            })
+
+            afterEach(() => {
+                document.body.removeChild(ulElm)
+            })
+
+            it('it should return a list of suggestions from the content of ' 
+                + 'a selection of elements', async () => {
+
+                typeahead = new Typeahead(
+                    inputElm,
+                    {
+                        'list': '.suggestions > *'
+                    }
+                )
+                typeahead.init()
+
+                const suggestions = await behaviours.elements(typeahead, 'fo')
+                suggestions.should.deep.equal(
+                    [
+                        {
+                            'label': 'foo',
+                            'value': 'foo'
+                        },
+                        {
+                            'label': 'foobar',
+                            'value': 'foobar'
+                        }
+                    ]
+                )
+            })
+        })
+
+        describe('json', () => {
+            it('it should return a list of suggestions from an a JSON string', 
+                async () => {
+
+                typeahead = new Typeahead(
+                    inputElm,
+                    {
+                        'list': JSON.stringify(
+                            [
+                                {
+                                    'label': 'foo',
+                                    'value': 'foo'
+                                },
+                                {
+                                    'label': 'foobar',
+                                    'value': 'foobar'
+                                }
+                            ]
+                        )
+                    }
+                )
+                typeahead.init()
+
+                const suggestions = await behaviours.json(typeahead, 'fo')
+                suggestions.should.deep.equal(
+                    [
+                        {
+                            'label': 'foo',
+                            'value': 'foo'
+                        },
+                        {
+                            'label': 'foobar',
+                            'value': 'foobar'
+                        }
+                    ]
+                )
+            })
+        })
+
+        describe('string', () => {
+            it('it should return a list of suggestions from an a comma' + 
+                'separated list', async () => {
+
+                typeahead = new Typeahead(
+                    inputElm,
+                    {
+                        'list': 'foo,foobar'
+                    }
+                )
+                typeahead.init()
+
+                const suggestions = await behaviours.string(typeahead, 'fo')
+                suggestions.should.deep.equal(['foo', 'foobar'])
+            })
+        })
+    })
+
+    describe('filter', () => {
+        const behaviours = Typeahead.behaviours.filter
+        let typeahead = null
+        let suggestion = null
+
+        beforeEach(() => {
+            typeahead = new Typeahead(inputElm)
+            typeahead.init()
+
+            suggestion = {
+                'label': 'Foobar',
+                'value': 'foobar'
+            }
+        })
+
+        afterEach(() => {
+            typeahead.destroy()
+        })
+
+        describe('contains', () => {
+            it('should return true if the query string value is contained in '
+                + 'the suggestion\'s value', () => {
+
+                const s = suggestion
+                behaviours.contains(typeahead, s, 'foo').should.be.true
+                behaviours.contains(typeahead, s, 'oob').should.be.true
+                behaviours.contains(typeahead, s, 'bar').should.be.true
+                behaviours.contains(typeahead, s, 'xyz').should.be.false
+            })
+        })
+
+    })
 })
+
+// - startswith
+
+// input
+// - setHidden
+// - setValue
+// - tokenizer
+
+// query
+// - value
+
+// sort
+// - length
