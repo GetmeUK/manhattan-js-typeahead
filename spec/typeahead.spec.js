@@ -988,7 +988,7 @@ describe('Typeahead', () => {
         })
     })
 
-    describe('element', () => {
+    describe('behaviours > element', () => {
         const behaviours = Typeahead.behaviours.element
         let typeahead = null
         let suggestion = null
@@ -1008,7 +1008,7 @@ describe('Typeahead', () => {
         })
 
         describe('default', () => {
-            it('it should return an elemnet containing the suggestion with '
+            it('it should return an element containing the suggestion with '
                 + 'the matching part of the label marked', () => {
 
                 const html = '<div class="mh-typeahead__suggestion">' 
@@ -1021,7 +1021,7 @@ describe('Typeahead', () => {
         })
     })
 
-    describe('fetch', () => {
+    describe('behaviours > fetch', () => {
         const behaviours = Typeahead.behaviours.fetch
         let typeahead = null
 
@@ -1274,7 +1274,7 @@ describe('Typeahead', () => {
         })
     })
 
-    describe('filter', () => {
+    describe('behaviours > filter', () => {
         const behaviours = Typeahead.behaviours.filter
         let typeahead = null
         let suggestion = null
@@ -1316,7 +1316,7 @@ describe('Typeahead', () => {
         })
     })
 
-    describe('input', () => {
+    describe('behaviours > input', () => {
         const behaviours = Typeahead.behaviours.input
         let hiddenInputElm = null
         let suggestion = null
@@ -1425,7 +1425,7 @@ describe('Typeahead', () => {
         })
     })
 
-    describe('query', () => {
+    describe('behaviours > query', () => {
         const behaviours = Typeahead.behaviours.query
         let typeahead = null
 
@@ -1448,7 +1448,7 @@ describe('Typeahead', () => {
         })
     })
 
-    describe('sort', () => {
+    describe('behaviours > sort', () => {
         const behaviours = Typeahead.behaviours.sort
         let typeahead = null
 

@@ -123,11 +123,14 @@ export class Tokenizer {
                 const {css} = this.constructor
                 if (event.target.classList.contains(css['remove'])) {
                     event.preventDefault()
-                    const tokenElm = $.closest(
-                        event.target,
-                        `.${css['token']}`
-                    )
-                    this.removeToken(tokenElm._token)
+
+                    if(event.button == 0) {
+                        const tokenElm = $.closest(
+                            event.target,
+                            `.${css['token']}`
+                        )
+                        this.removeToken(tokenElm._token)
+                    }
                 }
             },
 
@@ -218,7 +221,7 @@ export class Tokenizer {
             this._tokens = []
 
             // Remove the element
-            document.body.removeChild(this.tokenizer)
+            this.tokenizer.parentNode.removeChild(this.tokenizer)
             this._dom.tokenizer = null
         }
 
@@ -227,7 +230,7 @@ export class Tokenizer {
             this._sortable.destroy()
             this._sortable = null
         }
-        
+
         // Remove the tokenizer reference from the input
         delete this._dom.input._mhTokenizer
     }
@@ -288,7 +291,7 @@ export class Tokenizer {
         this._sync()
 
         // Dispatch tokenadded event against the input
-        $.dispatch(this.input, 'tokenadded', token)
+        $.dispatch(this.input, 'tokenremoved', token)
     }
 
     // -- Private methods --
@@ -381,9 +384,8 @@ Tokenizer.behaviours = {
             for (let hiddenElm of hiddenElms) {
                 hiddenElm.parentNode.removeChild(hiddenElm)
             }
-
             // Add hidden elements for each token
-            for (let token of inst.token) {
+            for (let token of inst.tokens) {
                 let hiddenElm = $.create(
                     'input',
                     {
