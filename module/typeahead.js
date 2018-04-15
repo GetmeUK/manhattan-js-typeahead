@@ -111,11 +111,6 @@ export class Typeahead {
         // Set up event handlers
         this._handlers = {
 
-            'clear': (event) => {
-                event.preventDefault()
-                this.clear()
-            },
-
             'close': (event) => {
                 this.close()
             },
@@ -169,12 +164,11 @@ export class Typeahead {
             },
 
             'select': (event) => {
-
                 // Ingore mousedown (touchstart) against the typeahead
                 if (event.target === this.typeahead) {
                     return
                 }
-
+                
                 // Check the mouse button that triggered the event was the
                 // left mouse button (for touchstart will be the default).
                 if (event.button !== 0) {
@@ -794,7 +788,7 @@ Typeahead.behaviours = {
                 inst.input.value = ''
                 hiddenElm.value = ''
             } else {
-                inst.input.value = suggestion.value
+                inst.input.value = suggestion.label
                 hiddenElm.value = suggestion.value
             }
 
@@ -821,11 +815,7 @@ Typeahead.behaviours = {
          * integrate the typeahead with a tokenizer.
          */
         'tokenizer': (inst, suggestion) => {
-
-            if(suggestion !== null) {
-                inst.input._token = suggestion
-            }
-
+            inst.input._token = suggestion
             $.dispatch(inst.input, 'change')
         }
     },
