@@ -902,7 +902,7 @@ describe('Typeahead', () => {
                     onSelect.should.have.been.called
                 })
             })
-        }),
+        })
 
         describe('select', () => {
             
