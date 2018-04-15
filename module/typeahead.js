@@ -154,6 +154,7 @@ export class Typeahead {
                     break
 
                 case 40:
+                    // Down arrow
                     event.preventDefault()
                     this.next()
                     break
@@ -168,7 +169,7 @@ export class Typeahead {
                 if (event.target === this.typeahead) {
                     return
                 }
-                
+
                 // Check the mouse button that triggered the event was the
                 // left mouse button (for touchstart will be the default).
                 if (event.button !== 0) {

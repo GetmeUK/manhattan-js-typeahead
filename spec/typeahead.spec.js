@@ -471,7 +471,7 @@ describe('Typeahead', () => {
 
             })
 
-            describe('autofirst', () => {
+            describe('autoFirst', () => {
 
                 beforeEach(() => {
                     typeahead._options.autoFirst = true
@@ -780,18 +780,129 @@ describe('Typeahead', () => {
                 inputElm,
                 {
                     'coerce': 'valueOnly',
-                    'list': ['foo', 'bar']
+                    'list': ['foo', 'foobar', 'bar']
                 }
             )
             typeahead.init()
 
+            sinon.spy(typeahead, 'close')
+            sinon.spy(typeahead, 'next')
+            sinon.spy(typeahead, 'previous')
             sinon.spy(typeahead, 'select')
         })
 
         afterEach(() => {
+            typeahead.close.restore()
+            typeahead.next.restore()
+            typeahead.previous.restore()
             typeahead.select.restore()
             typeahead.destroy()
         })
+
+        describe('nav', () => {
+
+            it('should call select when the enter key is pressed if the a '
+                + 'suggestion has focus', async () => {
+
+                await typeahead.update('fo')
+                typeahead.focus(0)
+
+                $.dispatch(inputElm, 'keydown', {'keyCode': 13})
+                typeahead.select.should.have.been.called
+            })
+
+            it('should call close when the enter key is pressed if the no '
+                + 'suggestion has focus', async () => {
+
+                await typeahead.update('fo')
+
+                $.dispatch(inputElm, 'keydown', {'keyCode': 13})
+                typeahead.select.should.not.have.been.called
+                typeahead.close.should.have.been.called
+            })
+
+            it('should close the typeahead when the escape key is '
+                + 'pressed', async () => {
+
+                await typeahead.update('fo')
+
+                $.dispatch(inputElm, 'keydown', {'keyCode': 27})
+                typeahead.isOpen.should.be.false
+            })
+
+            it('should call previous when the up arrow is '
+                + 'pressed', async () => {
+
+                await typeahead.update('fo')
+
+                $.dispatch(inputElm, 'keydown', {'keyCode': 38})
+                typeahead.previous.should.have.been.called
+            })
+
+            it('should call next when the down arrow is '
+                + 'pressed', async () => {
+
+                await typeahead.update('fo')
+
+                $.dispatch(inputElm, 'keydown', {'keyCode': 40})
+                typeahead.next.should.have.been.called
+            })
+
+            it('should do nothing if the tab key is pressed and the '
+                + 'mustMatch option is false', async () => {
+
+                const onSelect = sinon.spy()
+                $.listen(inputElm, {'select': onSelect})
+
+                await typeahead.update('fo')
+
+                $.dispatch(inputElm, 'keydown', {'keyCode': 9})
+                onSelect.should.not.have.been.called
+            })
+            
+            it('should do nothing if the typeahead isn\'t open', async () => {
+
+                await typeahead.update('fo')
+                typeahead.close()
+
+                $.dispatch(inputElm, 'keydown', {'keyCode': 40})
+                typeahead.index.should.equal(-1)
+            })
+
+            it('should/ do nothing if none of the navigation keys are '
+                + 'pressed', async () => {
+
+                await typeahead.update('fo')
+
+                $.dispatch(inputElm, 'keydown', {'keyCode': 999})
+                typeahead.index.should.equal(-1)
+            })
+
+            describe('mustMatch', () => {
+
+                beforeEach(() => {
+                    typeahead._options.mustMatch = true
+                })
+
+                afterEach(() => {
+                    typeahead._options.mustMatch = false
+                })
+                
+                it('should select the current suggestion if the tab key is '
+                    + 'pressed and the mustMatch option is '
+                    + 'true', async () => {
+
+                    const onSelect = sinon.spy()
+                    $.listen(inputElm, {'select': onSelect})
+
+                    await typeahead.update('fo')
+                    typeahead.focus(0)
+
+                    $.dispatch(inputElm, 'keydown', {'keyCode': 9}) 
+                    onSelect.should.have.been.called
+                })
+            })
+        }),
 
         describe('select', () => {
             
