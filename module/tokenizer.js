@@ -164,6 +164,9 @@ export class Tokenizer {
 
     // -- Public methods --
 
+    /**
+     * Add a token to the typeahead
+     */
     addToken(token, index=null) {
         // If duplicates are not allowed then first check to make sure the
         // token has not already been added.
@@ -176,7 +179,11 @@ export class Tokenizer {
         }
 
         // Add the token
-        this._tokens.push(token)
+        if (index === null) {
+            this._tokens.push(token)
+        } else {
+            this._tokens.splice(index, 0, token)
+        }
 
         // Sync the tokens
         this._sync()
@@ -212,6 +219,7 @@ export class Tokenizer {
 
             // Remove the element
             document.body.removeChild(this.tokenizer)
+            this._dom.tokenizer = null
         }
 
         if (this._sortable !== null) {
@@ -219,6 +227,9 @@ export class Tokenizer {
             this._sortable.destroy()
             this._sortable = null
         }
+        
+        // Remove the tokenizer reference from the input
+        delete this._dom.input._mhTokenizer
     }
 
     /**

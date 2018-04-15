@@ -349,7 +349,7 @@ describe('Typeahead', () => {
 
             })
 
-            it('should add a reference for the to the '
+            it('should add a reference for the typeahead to the '
                 + 'input', () => {
 
                 typeahead.init()
