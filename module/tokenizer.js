@@ -124,7 +124,7 @@ export class Tokenizer {
                 if (event.target.classList.contains(css['remove'])) {
                     event.preventDefault()
 
-                    if(event.button == 0) {
+                    if(event.button === 0) {
                         const tokenElm = $.closest(
                             event.target,
                             `.${css['token']}`

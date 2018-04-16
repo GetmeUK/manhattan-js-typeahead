@@ -77,16 +77,28 @@ describe('Tokenizer', () => {
         describe('tokens', () => {
 
             beforeEach(() => {  
-                tokenizer.addToken({'label': 'foo', 'value': 'foo'})
-                tokenizer.addToken({'label': 'bar', 'value': 'bar'})
+                tokenizer.addToken({
+                    'label': 'foo', 
+                    'value': 'foo'
+                })
+                tokenizer.addToken({
+                    'label': 'bar', 
+                    'value': 'bar'
+                })
             })
 
             it('should return a list of tokens added to the ' 
                 + 'typeahead', () => {
 
                 tokenizer.tokens.should.deep.equal([
-                    {'label': 'foo', 'value': 'foo'},
-                    {'label': 'bar', 'value': 'bar'}
+                    {
+                        'label': 'foo', 
+                        'value': 'foo'
+                    },
+                    {
+                        'label': 'bar', 
+                        'value': 'bar'
+                    }
                 ])
             })
         })
@@ -110,14 +122,23 @@ describe('Tokenizer', () => {
         describe('addToken', () => {
 
             it('should add a token to the list of tokens', () => {
-                tokenizer.addToken({'label': 'foo', 'value': 'foo'})
+                tokenizer.addToken({
+                    'label': 'foo', 
+                    'value': 'foo'
+                })
                 tokenizer.tokens.should.deep.equal([
-                    {'label': 'foo', 'value': 'foo'}
+                    {
+                        'label': 'foo', 
+                        'value': 'foo'
+                    }
                 ])
             })
 
             it('should add a token element to the tokenizer element', () => {
-                tokenizer.addToken({'label': 'foo', 'value': 'foo'})
+                tokenizer.addToken({
+                    'label': 'foo', 
+                    'value': 'foo'
+                })
                 tokenizer.tokenizer.children.length.should.equal(1)
                 tokenizer.tokenizer.children[0]._token.should.deep.equal({
                     'label': 'foo',
@@ -128,28 +149,61 @@ describe('Tokenizer', () => {
             it('should dispatch a tokenadded event', () => {
                 const onTokenAdded = sinon.spy()
                 $.listen(inputElm, {'tokenadded': onTokenAdded})
-                tokenizer.addToken({'label': 'foo', 'value': 'foo'})
+                tokenizer.addToken({
+                    'label': 'foo', 
+                    'value': 'foo'
+                })
                 onTokenAdded.should.have.been.called
             })
 
             it('should add a new token at the given index', () => {
-                tokenizer.addToken({'label': 'foo', 'value': 'foo'})
-                tokenizer.addToken({'label': 'bar', 'value': 'bar'})
-                tokenizer.addToken({'label': 'zee', 'value': 'zee'}, 1)
+                tokenizer.addToken({
+                    'label': 'foo', 
+                    'value': 'foo'
+                })
+                tokenizer.addToken({
+                    'label': 'bar', 
+                    'value': 'bar'
+                })
+                tokenizer.addToken(
+                    {
+                        'label': 'zee', 
+                        'value': 'zee'
+                    }, 
+                    1
+                )
                 tokenizer.tokens.should.deep.equal([
-                    {'label': 'foo', 'value': 'foo'},
-                    {'label': 'zee', 'value': 'zee'},
-                    {'label': 'bar', 'value': 'bar'}
+                    {
+                        'label': 'foo', 
+                        'value': 'foo'
+                    },
+                    {
+                        'label': 'zee', 
+                        'value': 'zee'
+                    },
+                    {
+                        'label': 'bar', 
+                        'value': 'bar'
+                    }
                 ])  
             })
 
             it('should not allow duplicates if the allowDuplicates option '
                 + 'is false', () => {
 
-                tokenizer.addToken({'label': 'foo', 'value': 'foo'})
-                tokenizer.addToken({'label': 'foo', 'value': 'foo'})
+                tokenizer.addToken({
+                    'label': 'foo', 
+                    'value': 'foo'
+                })
+                tokenizer.addToken({
+                    'label': 'foo', 
+                    'value': 'foo'
+                })
                 tokenizer.tokens.should.deep.equal([
-                    {'label': 'foo', 'value': 'foo'}
+                    {
+                        'label': 'foo', 
+                        'value': 'foo'
+                    }
                 ])
             })
 
@@ -166,11 +220,23 @@ describe('Tokenizer', () => {
                 it('should allow duplicates if the allowDuplicates option is '
                     + 'true', () => {
 
-                    tokenizer.addToken({'label': 'foo', 'value': 'foo'})
-                    tokenizer.addToken({'label': 'foo', 'value': 'foo'})
+                    tokenizer.addToken({
+                        'label': 'foo', 
+                        'value': 'foo'
+                    })
+                    tokenizer.addToken({
+                        'label': 'foo', 
+                        'value': 'foo'
+                    })
                     tokenizer.tokens.should.deep.equal([
-                        {'label': 'foo', 'value': 'foo'},
-                        {'label': 'foo', 'value': 'foo'}
+                        {
+                            'label': 'foo', 
+                            'value': 'foo'
+                        },
+                        {
+                            'label': 'foo', 
+                            'value': 'foo'
+                        }
                     ])
                 })
             })
@@ -271,9 +337,23 @@ describe('Tokenizer', () => {
                     .true
             })
 
-            it('should set up event handlers for the tokenizer', async () => {
+            it('should set up event handlers for the tokenizer', () => {
                 tokenizer.init()
 
+                // Pressing a key while the input has focus should call the
+                // add event handler.
+                $.dispatch(inputElm, 'keydown')
+                tokenizer._handlers.add.should.have.been.called
+
+                // Clicking on the tokenizer element should call the remove
+                // event handler.
+                $.dispatch(tokenizer.tokenizer, 'click')
+                tokenizer._handlers.remove.should.have.been.called
+
+                // Sorting the list of token elements should call the sort
+                // event handler.
+                $.dispatch(tokenizer.tokenizer, 'sorted')
+                tokenizer._handlers.sort.should.have.been.called
             })
 
             describe('sortable', () => {
@@ -293,17 +373,32 @@ describe('Tokenizer', () => {
             let token = null
 
             beforeEach(() => {
-                token = {'label': 'bar', 'value': 'bar'}
-                tokenizer.addToken({'label': 'foo', 'value': 'foo'})
+                token = {
+                    'label': 'bar',
+                    'value': 'bar'
+                }
+                tokenizer.addToken({
+                    'label': 'foo', 
+                    'value': 'foo'
+                })
                 tokenizer.addToken(token)
-                tokenizer.addToken({'label': 'zee', 'value': 'zee'})
+                tokenizer.addToken({
+                    'label': 'zee', 
+                    'value': 'zee'
+                })
             })
 
             it('should remove a token from the list of tokens', () => {
                 tokenizer.removeToken(token)
                 tokenizer.tokens.should.deep.equal([
-                    {'label': 'foo', 'value': 'foo'},
-                    {'label': 'zee', 'value': 'zee'}
+                    {
+                        'label': 'foo', 
+                        'value': 'foo'
+                    },
+                    {
+                        'label': 'zee', 
+                        'value': 'zee'
+                    }
                 ])
             })
 
@@ -351,9 +446,18 @@ describe('Tokenizer', () => {
                 + 'of tokens', () => {
 
                 tokenizer.init([
-                    {'label': 'foo', 'value': 'foo'},
-                    {'label': 'bar', 'value': 'bar'},
-                    {'label': 'zee', 'value': 'zee'}
+                    {
+                        'label': 'foo',
+                        'value': 'foo'
+                    },
+                    {
+                        'label': 'bar', 
+                        'value': 'bar'
+                    },
+                    {
+                        'label': 'zee', 
+                        'value': 'zee'
+                    }
                 ])
                 tokenizer._sync()
 
@@ -374,9 +478,18 @@ describe('Tokenizer', () => {
 
             it('should update the value of the tokens in the form', () => {
                 tokenizer.init([
-                    {'label': 'foo', 'value': 'foo'},
-                    {'label': 'bar', 'value': 'bar'},
-                    {'label': 'zee', 'value': 'zee'}
+                    {
+                        'label': 'foo', 
+                        'value': 'foo'
+                    },
+                    {
+                        'label': 'bar', 
+                        'value': 'bar'
+                    },
+                    {
+                        'label': 'zee', 
+                        'value': 'zee'
+                    }
                 ])
                 tokenizer._sync()
 
@@ -409,7 +522,10 @@ describe('Tokenizer', () => {
                 $.dispatch(inputElm, 'keydown', {'keyCode': 13})
 
                 tokenizer.tokens.should.deep.equal([
-                    {'label': 'foo', 'value': 'foo'}
+                    {
+                        'label': 'foo', 
+                        'value': 'foo'
+                    }
                 ])
             })
 
@@ -446,11 +562,17 @@ describe('Tokenizer', () => {
                 it('should add a new token based on the _token attribute '
                     + 'against the input', () => {
 
-                    inputElm._token = {'label': 'foo', 'value': 'foo'}
-                    $.dispatch(inputElm, 'keydown', {'keyCode': 13})              
+                    inputElm._token = {
+                        'label': 'foo', 
+                        'value': 'foo'
+                    }
+                    $.dispatch(inputElm, 'keydown', {'keyCode': 13})
 
                     tokenizer.tokens.should.deep.equal([
-                        {'label': 'foo', 'value': 'foo'}
+                        {
+                            'label': 'foo', 
+                            'value': 'foo'
+                        }
                     ])
                 })
 
@@ -468,13 +590,16 @@ describe('Tokenizer', () => {
         describe('remove', () => {
             
             beforeEach(() => {
-                tokenizer.addToken({'label': 'foo', 'value': 'foo'})
+                tokenizer.addToken({
+                    'label': 'foo', 
+                    'value': 'foo'
+                })
             })
 
             it('should remove the token associated with the element '
                 + 'clicked', () => {
 
-                const tokenElm = tokenizer.tokenizer.children[0]
+                const [tokenElm] = tokenizer.tokenizer.children
                 const removeElm = $.one(
                     `.${Tokenizer.css['remove']}`, 
                     tokenElm
@@ -487,18 +612,21 @@ describe('Tokenizer', () => {
             it('should do nothing if the element selected isn\'t the remove '
                 + 'element', () => {
 
-                const tokenElm = tokenizer.tokenizer.children[0]
+                const [tokenElm] = tokenizer.tokenizer.children
                 $.dispatch(tokenElm, 'click', {'button': 0})
 
                 tokenizer.tokens.should.deep.equal([
-                    {'label': 'foo', 'value': 'foo'}
+                    {
+                        'label': 'foo', 
+                        'value': 'foo'
+                    }
                 ])
             })
 
             it('should do nothing if the remove element is clicked with any '
                 + 'button other than the left mouse button', () => {
 
-                const tokenElm = tokenizer.tokenizer.children[0]
+                const [tokenElm] = tokenizer.tokenizer.children
                 const removeElm = $.one(
                     `.${Tokenizer.css['remove']}`, 
                     tokenElm
@@ -506,7 +634,10 @@ describe('Tokenizer', () => {
                 $.dispatch(removeElm, 'click', {'button': 1})
 
                 tokenizer.tokens.should.deep.equal([
-                    {'label': 'foo', 'value': 'foo'}
+                    {
+                        'label': 'foo', 
+                        'value': 'foo'
+                    }
                 ])
             })
         })
@@ -514,24 +645,42 @@ describe('Tokenizer', () => {
         describe('sort', () => {
 
             beforeEach(() => {
-                tokenizer.addToken({'label': 'foo', 'value': 'foo'})
-                tokenizer.addToken({'label': 'bar', 'value': 'bar'})
-                tokenizer.addToken({'label': 'zee', 'value': 'zee'})
+                tokenizer.addToken({
+                    'label': 'foo', 
+                    'value': 'foo'
+                })
+                tokenizer.addToken({
+                    'label': 'bar', 
+                    'value': 'bar'
+                })
+                tokenizer.addToken({
+                    'label': 'zee', 
+                    'value': 'zee'
+                })
             })
 
             it('should update the tokenizer\'s tokens to match the order '
                 + 'of the elements', () => {
 
                 const tokenizerElm = tokenizer.tokenizer
-                const tokenElm = tokenizerElm.children[0]
+                const [tokenElm] = tokenizerElm.children
                 tokenizerElm.removeChild(tokenElm)
                 tokenizerElm.appendChild(tokenElm)
                 $.dispatch(tokenizerElm, 'sorted')
 
                 tokenizer.tokens.should.deep.equal([
-                    {'label': 'bar', 'value': 'bar'},
-                    {'label': 'zee', 'value': 'zee'},
-                    {'label': 'foo', 'value': 'foo'}
+                    {
+                        'label': 'bar', 
+                        'value': 'bar'
+                    },
+                    {
+                        'label': 'zee', 
+                        'value': 'zee'
+                    },
+                    {
+                        'label': 'foo', 
+                        'value': 'foo'
+                    }
                 ])
             })
         })        
@@ -562,7 +711,10 @@ describe('Tokenizer', () => {
                     + '</div>'
                 const elm = behaviours.default(
                     tokenizer, 
-                    {'label': 'Foo', 'value': 'foo'}
+                    {
+                        'label': 'Foo', 
+                        'value': 'foo'
+                    }
                 )
                 elm.outerHTML.should.equal(html)
 
@@ -580,9 +732,18 @@ describe('Tokenizer', () => {
                 {'hiddenSelector': '[name="hidden-field"]'}
             )
             tokenizer.init([
-                {'label': 'foo', 'value': 'foo'},
-                {'label': 'bar', 'value': 'bar'},
-                {'label': 'zee', 'value': 'zee'}
+                {
+                    'label': 'foo', 
+                    'value': 'foo'
+                },
+                {
+                    'label': 'bar', 
+                    'value': 'bar'
+                },
+                {
+                    'label': 'zee', 
+                    'value': 'zee'
+                }
             ])
         })
 
