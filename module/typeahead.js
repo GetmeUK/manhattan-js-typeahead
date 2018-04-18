@@ -676,7 +676,9 @@ Typeahead.behaviours = {
 
             if (!inst._options.disableCache) {
                 if (inst._cache[cacheKey]) {
-                    return inst._cache[cacheKey]
+                    return new Promise((resolve, reject) => {
+                        resolve(inst._cache[cacheKey])
+                    })
                 }
             }
 
