@@ -332,7 +332,7 @@ export class Typeahead {
 
         // Update the index of the focused suggestion
         this._index = index
-        
+
         // If a suggestion was given focus apply the focused CSS class to the
         // associated suggestion element in the typeahead.
         if (this.focused) {
@@ -673,8 +673,10 @@ Typeahead.behaviours = {
 
             // Check for cached suggestions
             const cacheKey = q.substr(0, inst._options.minChars).toLowerCase()
+            let qs = q
 
             if (!inst._options.disableCache) {
+                qs = cacheKey
                 if (inst._cache[cacheKey]) {
                     return new Promise((resolve, reject) => {
                         resolve(inst._cache[cacheKey])
@@ -685,9 +687,9 @@ Typeahead.behaviours = {
             // Fetch the suggestions via an AJAX request
             let url = inst._options.list
             if (url.split('?', 2).length === 1) {
-                url = `${url}?q=${q}`
+                url = `${url}?q=${qs}`
             } else {
-                url = `${url}&q=${q}`
+                url = `${url}&q=${qs}`
             }
 
             return fetch(url)
