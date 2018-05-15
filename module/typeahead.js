@@ -332,7 +332,7 @@ export class Typeahead {
 
         // Update the index of the focused suggestion
         this._index = index
-        
+
         // If a suggestion was given focus apply the focused CSS class to the
         // associated suggestion element in the typeahead.
         if (this.focused) {
@@ -557,7 +557,10 @@ export class Typeahead {
                 })
 
                 // Limit the list of suggestions to the maximum suggestions
-                suggestions = suggestions.slice(0, this._options.maxItems)
+                suggestions = suggestions.slice(
+                    0,
+                    this._options.maxSuggestions
+                )
 
                 // Update the suggestions
                 this._suggestions = suggestions
