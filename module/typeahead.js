@@ -557,7 +557,10 @@ export class Typeahead {
                 })
 
                 // Limit the list of suggestions to the maximum suggestions
-                suggestions = suggestions.slice(0, this._options.maxItems)
+                suggestions = suggestions.slice(
+                    0,
+                    this._options.maxSuggestions
+                )
 
                 // Update the suggestions
                 this._suggestions = suggestions
