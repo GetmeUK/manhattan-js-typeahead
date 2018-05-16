@@ -321,7 +321,6 @@ export class Typeahead {
      * Focus on the suggestion at the given index.
      */
     focus(index) {
-
         // Remove the focused CSS class any suggestion element in the type
         // ahead.
         const focusedCSS = this.constructor.css['focused']
@@ -413,7 +412,13 @@ export class Typeahead {
     /**
      * Open the typeahead.
      */
-    open() {
+    open() {        
+        // If the `autoFirst` option is true and no suggestion currently has
+        // focus then select the first option.
+        if (this._options.autoFirst && this.index === -1) {
+            this.focus(0)
+        }
+
         // If the typeahead is already open there's nothing to do
         if (this.isOpen) {
             return
@@ -432,12 +437,6 @@ export class Typeahead {
 
         // Flag the typeahead as open
         this._open = true
-
-        // If the `autoFirst` option is true and no suggestion currently has
-        // focus then select the first option.
-        if (this._options.autoFirst && this.index === -1) {
-            this.focus(0)
-        }
 
         // Dispatch opened event against the input
         $.dispatch(this.input, 'opened')
@@ -498,7 +497,6 @@ export class Typeahead {
         // Dispatch selected event against the input
         $.dispatch(this.input, 'selected', {suggestion})
     }
-
 
     /**
      * Update the typeahead to show relevant suggestions for the given query.
@@ -576,10 +574,10 @@ export class Typeahead {
                 // suggestions and display the typeahead.
                 const element = behaviours.element[this._behaviours.element]
                 for (let suggestion of this._suggestions) {
-                    this.typeahead.appendChild(element(this, suggestion, q))
+                    let suggestionElm = element(this, suggestion, q)
+                    this.typeahead.appendChild(suggestionElm)
                 }
                 this.open()
-
             })
             .catch((e) => {
 
