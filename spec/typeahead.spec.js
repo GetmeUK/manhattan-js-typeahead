@@ -230,7 +230,7 @@ describe('Typeahead', () => {
             it('it should remove the typeahead', () => {
                 typeahead.destroy()
 
-                // Resizing the window or blurring the input should no longer 
+                // Resizing the window or blurring the input should no longer
                 // call the close event handler.
                 $.dispatch(window, 'fullscreenchange')
                 $.dispatch(window, 'orientationchange')
@@ -255,7 +255,7 @@ describe('Typeahead', () => {
                     .equal(0)
                 chai.expect(typeahead.typeahead).to.be.null
 
-                // The reference to the typeahead should have been removed 
+                // The reference to the typeahead should have been removed
                 // from the input.
                 chai.expect(inputElm._mhTypeahead).to.be.undefined
             })
@@ -264,7 +264,7 @@ describe('Typeahead', () => {
                 + 'been initialized', () => {
                 typeahead.destroy()
                 typeahead.destroy()
-            })            
+            })
 
         })
 
@@ -316,7 +316,7 @@ describe('Typeahead', () => {
                     .should
                     .be
                     .true
-        
+
                 otherTypeahead.typeahead
                     .children[0]
                     .classList
@@ -333,7 +333,7 @@ describe('Typeahead', () => {
                     .length
                     .should
                     .equal(0)
-                
+
             })
         })
 
@@ -440,8 +440,8 @@ describe('Typeahead', () => {
 
             it('should do nothing if there are no suggestions', () => {
                 otherTypeahead.next()
-                otherTypeahead.index.should.equal(-1)               
-            })            
+                otherTypeahead.index.should.equal(-1)
+            })
         })
 
         describe('open', () => {
@@ -530,12 +530,12 @@ describe('Typeahead', () => {
 
             it('should do nothing if there are no suggestions', () => {
                 otherTypeahead.previous()
-                otherTypeahead.index.should.equal(-1)               
-            })            
+                otherTypeahead.index.should.equal(-1)
+            })
         })
 
         describe('select', () => {
-            it('should dispatch a select and selected event against the ' 
+            it('should dispatch a select and selected event against the '
                 + 'input', async () => {
 
                 const onSelect = sinon.spy()
@@ -566,11 +566,11 @@ describe('Typeahead', () => {
                 inputElm.value.should.equal('foo')
             })
 
-            it('should not attempt to set an input value if the select ' 
+            it('should not attempt to set an input value if the select '
                 + 'event is cancelled', async () => {
 
                 $.listen(
-                    inputElm, 
+                    inputElm,
                     {
                         'select': (event) => {
                             event.preventDefault()
@@ -589,10 +589,10 @@ describe('Typeahead', () => {
 
                 inputElm.value.should.equal('')
             })
-            
+
             it('should close the typeahead', async () => {
                 await typeahead.update('fo')
-                
+
                 typeahead.open()
                 typeahead.select(0)
 
@@ -604,9 +604,9 @@ describe('Typeahead', () => {
 
                 const onSelect = sinon.spy()
                 $.listen(inputElm, {'select': onSelect})
-                
+
                 await typeahead.update('fo')
-                
+
                 typeahead.open()
                 typeahead.select(-1)
 
@@ -646,7 +646,7 @@ describe('Typeahead', () => {
                 + 'match the query string', async () => {
 
                 await otherTypeahead.update('fo')
-                
+
                 otherTypeahead.suggestionCount.should.equal(2)
                 otherTypeahead.suggestions.should.deep.equal([
                     {
@@ -664,7 +664,7 @@ describe('Typeahead', () => {
 
             it('should clear existing suggestions', async () => {
 
-                await otherTypeahead.update('fo')                
+                await otherTypeahead.update('fo')
                 await otherTypeahead.update('xy')
 
                 otherTypeahead.suggestionCount.should.equal(0)
@@ -672,7 +672,7 @@ describe('Typeahead', () => {
 
             })
 
-            it('should clear the input value if the query string is ' 
+            it('should clear the input value if the query string is '
                 + 'empty', async () => {
 
                 inputElm.value = 'some value'
@@ -681,13 +681,13 @@ describe('Typeahead', () => {
 
             })
 
-            it('should close without fetching suggestions if the query' 
+            it('should close without fetching suggestions if the query'
                 + 'string is shorter than the minChar option', async () => {
 
                 await otherTypeahead.update('fo')
                 await otherTypeahead.open()
                 await otherTypeahead.update('f')
-                
+
                 otherTypeahead.suggestionCount.should.equal(0)
                 otherTypeahead.isOpen.should.be.false
 
@@ -707,14 +707,14 @@ describe('Typeahead', () => {
 
                 it('should close the typeahead if no suggestions are '
                     + 'fetched', async () => {
-                
+
                     await otherTypeahead.update('fo')
                     otherTypeahead.close.should.have.been.called
                 })
             })
 
             describe('failure', () => {
-                    
+
                 beforeEach(() => {
                     otherTypeahead._behaviours.fetch = 'failedFetch'
                 })
@@ -725,7 +725,7 @@ describe('Typeahead', () => {
 
                 it('should close the typeahead if there is an error raised '
                     + 'while fetching the results', async () => {
-                
+
                     await otherTypeahead.update('fo')
                     otherTypeahead.close.should.have.been.called
                 })
@@ -807,7 +807,7 @@ describe('Typeahead', () => {
                 await typeahead.update('fo')
                 typeahead.focus(0)
 
-                $.dispatch(inputElm, 'keydown', {'keyCode': 13})
+                $.dispatch(inputElm, 'keydown', {'key': 'Enter'})
                 typeahead.select.should.have.been.called
             })
 
@@ -816,7 +816,7 @@ describe('Typeahead', () => {
 
                 await typeahead.update('fo')
 
-                $.dispatch(inputElm, 'keydown', {'keyCode': 13})
+                $.dispatch(inputElm, 'keydown', {'key': 'Enter'})
                 typeahead.select.should.not.have.been.called
                 typeahead.close.should.have.been.called
             })
@@ -826,7 +826,7 @@ describe('Typeahead', () => {
 
                 await typeahead.update('fo')
 
-                $.dispatch(inputElm, 'keydown', {'keyCode': 27})
+                $.dispatch(inputElm, 'keydown', {'key': 'Escape'})
                 typeahead.isOpen.should.be.false
             })
 
@@ -835,7 +835,7 @@ describe('Typeahead', () => {
 
                 await typeahead.update('fo')
 
-                $.dispatch(inputElm, 'keydown', {'keyCode': 38})
+                $.dispatch(inputElm, 'keydown', {'key': 'ArrowUp'})
                 typeahead.previous.should.have.been.called
             })
 
@@ -844,7 +844,7 @@ describe('Typeahead', () => {
 
                 await typeahead.update('fo')
 
-                $.dispatch(inputElm, 'keydown', {'keyCode': 40})
+                $.dispatch(inputElm, 'keydown', {'key': 'ArrowDown'})
                 typeahead.next.should.have.been.called
             })
 
@@ -856,16 +856,16 @@ describe('Typeahead', () => {
 
                 await typeahead.update('fo')
 
-                $.dispatch(inputElm, 'keydown', {'keyCode': 9})
+                $.dispatch(inputElm, 'keydown', {'key': 'Tab'})
                 onSelect.should.not.have.been.called
             })
-            
+
             it('should do nothing if the typeahead isn\'t open', async () => {
 
                 await typeahead.update('fo')
                 typeahead.close()
 
-                $.dispatch(inputElm, 'keydown', {'keyCode': 40})
+                $.dispatch(inputElm, 'keydown', {'key': 'a'})
                 typeahead.index.should.equal(-1)
             })
 
@@ -874,7 +874,7 @@ describe('Typeahead', () => {
 
                 await typeahead.update('fo')
 
-                $.dispatch(inputElm, 'keydown', {'keyCode': 999})
+                $.dispatch(inputElm, 'keydown', {'key': ''})
                 typeahead.index.should.equal(-1)
             })
 
@@ -887,7 +887,7 @@ describe('Typeahead', () => {
                 afterEach(() => {
                     typeahead._options.mustMatch = false
                 })
-                
+
                 it('should select the current suggestion if the tab key is '
                     + 'pressed and the mustMatch option is '
                     + 'true', async () => {
@@ -898,14 +898,14 @@ describe('Typeahead', () => {
                     await typeahead.update('fo')
                     typeahead.focus(0)
 
-                    $.dispatch(inputElm, 'keydown', {'keyCode': 9}) 
+                    $.dispatch(inputElm, 'keydown', {'key': 'Tab'})
                     onSelect.should.have.been.called
                 })
             })
         })
 
         describe('select', () => {
-            
+
             it('should do nothing if the typeahead is the target of the'
                 + 'event', async () => {
 
@@ -1011,7 +1011,7 @@ describe('Typeahead', () => {
             it('it should return an element containing the suggestion with '
                 + 'the matching part of the label marked', () => {
 
-                const html = '<div class="mh-typeahead__suggestion">' 
+                const html = '<div class="mh-typeahead__suggestion">'
                         + '<mark>Fo</mark>o'
                     + '</div>'
                 const elm = behaviours.default(typeahead, suggestion, 'fo')
@@ -1121,7 +1121,7 @@ describe('Typeahead', () => {
 
                 await behaviours.ajax(typeahead, 'fo')
                 await behaviours.ajax(typeahead, 'fo')
-                
+
                 global.fetch.should.have.been.calledOnce
             })
 
@@ -1131,7 +1131,7 @@ describe('Typeahead', () => {
                 typeahead = new Typeahead(
                     inputElm,
                     {
-                        'disableCache': true, 
+                        'disableCache': true,
                         'list': '/some-url'
                     }
                 )
@@ -1139,7 +1139,7 @@ describe('Typeahead', () => {
 
                 await behaviours.ajax(typeahead, 'fo')
                 await behaviours.ajax(typeahead, 'fo')
-                               
+
                 global.fetch.should.have.been.calledTwice
 
             })
@@ -1200,7 +1200,7 @@ describe('Typeahead', () => {
                 document.body.removeChild(ulElm)
             })
 
-            it('it should return a list of suggestions from the content of ' 
+            it('it should return a list of suggestions from the content of '
                 + 'a selection of elements', async () => {
 
                 typeahead = new Typeahead(
@@ -1369,7 +1369,7 @@ describe('Typeahead', () => {
                 inputElm.value.should.equal('')
             })
 
-            it('it should set the value of the input to the suggestion\'s ' 
+            it('it should set the value of the input to the suggestion\'s '
                 + 'label', () => {
 
                 behaviours.setHidden(typeahead, suggestion)
@@ -1391,8 +1391,8 @@ describe('Typeahead', () => {
 
                 behaviours.setValue(typeahead, suggestion)
                 inputElm.value.should.equal('foo')
-            })  
-            
+            })
+
             it('it should clear the value of input if null is sent as a '
                 + 'suggestion', () => {
 
@@ -1466,7 +1466,7 @@ describe('Typeahead', () => {
                 + 'does not', () => {
 
                 const result = behaviours.length(
-                    typeahead, 
+                    typeahead,
                     'foo',
                     {'label': 'foobar'},
                     {'label': 'barfoo'}
@@ -1488,7 +1488,7 @@ describe('Typeahead', () => {
 
             })
 
-            it('should return -1 if both labels start with the query string ' 
+            it('should return -1 if both labels start with the query string '
                 + 'but a is shorter than b', () => {
 
                 const result = behaviours.length(
@@ -1501,7 +1501,7 @@ describe('Typeahead', () => {
 
             })
 
-            it('should return 1 if both labels start with the query string ' 
+            it('should return 1 if both labels start with the query string '
                 + 'but b is shorter than a', () => {
 
                 const result = behaviours.length(
@@ -1514,7 +1514,7 @@ describe('Typeahead', () => {
 
             })
 
-            it('should return -1 if both labels start with the query string, ' 
+            it('should return -1 if both labels start with the query string, '
                 + 'are the same length, and a is less than b', () => {
 
                 const result = behaviours.length(
@@ -1527,7 +1527,7 @@ describe('Typeahead', () => {
 
             })
 
-            it('should return 1 if both labels start with the query string, ' 
+            it('should return 1 if both labels start with the query string, '
                 + 'are the same length, and b is less than a', () => {
 
                 const result = behaviours.length(

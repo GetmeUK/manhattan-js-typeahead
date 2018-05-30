@@ -123,17 +123,15 @@ export class Typeahead {
                 }
 
                 // Handle the key pressed
-                switch (event.keyCode) {
+                switch (event.key) {
 
-                case 9:
-                    // Tab
+                case 'Tab':
                     if (this._options.mustMatch) {
                         this.select()
                     }
                     break
 
-                case 13:
-                    // Enter
+                case 'Enter':
                     if (this.index > -1) {
                         event.preventDefault()
                         this.select()
@@ -142,19 +140,18 @@ export class Typeahead {
                     }
                     break
 
-                case 27:
-                    // Escape
+                case 'Escape':
                     this.close()
                     break
 
-                case 38:
-                    // Up arrow
+                case 'ArrowUp':
+                case 'Up':
                     event.preventDefault()
                     this.previous()
                     break
 
-                case 40:
-                    // Down arrow
+                case 'ArrowDown':
+                case 'Down':
                     event.preventDefault()
                     this.next()
                     break

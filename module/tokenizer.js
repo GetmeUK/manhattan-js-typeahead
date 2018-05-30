@@ -83,7 +83,7 @@ export class Tokenizer {
             'add': (event) => {
                 // If the event was triggered by a keydown then check the
                 // key is enter.
-                if (event.type === 'keydown' && event.keyCode !== 13) {
+                if (event.type === 'keydown' && event.key !== 'Enter') {
                     return
                 }
 
