@@ -191,10 +191,25 @@ export class Typeahead {
             },
 
             'update': (event) => {
+                // To prevent multiple key presses triggering an update we
+                // apply a small delay before calling the fetch via the
+                // `delayedFetch` function.
+
                 // Get the query string
                 const {behaviours} = this.constructor
                 const q = behaviours.query[this._behaviours.query](this)
-                this.update(q)
+
+                const delayedUpdate = () => {
+                    this.update(q)
+                }
+
+                // Cancel any existing call to delayed update
+                if (this._delayedUpdate) {
+                    clearTimeout(this._delayedUpdate)
+                }
+
+                // Schedule a call to delayed update
+                this._delayedUpdate = setTimeout(delayedUpdate, 100)
             }
         }
     }
@@ -293,6 +308,15 @@ export class Typeahead {
             }
         )
 
+        // Cancel any delayed update or fetch
+        if (this._delayedUpdate) {
+            clearTimeout(this._delayedUpdate)
+        }
+
+        if (this._signal) {
+            this._signal.cancelled = true
+        }
+
         if (this.typeahead) {
             $.listen(
                 this.typeahead,
@@ -383,7 +407,6 @@ export class Typeahead {
                 'keydown': this._handlers.nav
             }
         )
-
     }
 
     /**
@@ -409,7 +432,7 @@ export class Typeahead {
     /**
      * Open the typeahead.
      */
-    open() {        
+    open() {
         // If the `autoFirst` option is true and no suggestion currently has
         // focus then select the first option.
         if (this._options.autoFirst && this.index === -1) {
@@ -521,9 +544,23 @@ export class Typeahead {
             return null
         }
 
+        // Cancel any existing fetch
+        if (this._signal) {
+            this._signal.cancelled = true
+        }
+
+        // Create a new signal for the new request
+        this._signal = {'cancelled': false}
+
         // Fetch the list of suggestions
-        return behaviours.fetch[this._behaviours.fetch](this, q)
-            .then((rawSuggestions) => {
+        return behaviours.fetch[this._behaviours.fetch](this, q, this._signal)
+            .then((response) => {
+                const [rawSuggestions, signal] = response
+
+                // If the signal was cancelled ignore the response
+                if (signal.cancelled) {
+                    return
+                }
 
                 // If no suggestions were returned then close the typeahead
                 // and we're done.
@@ -667,7 +704,7 @@ Typeahead.behaviours = {
         /**
          * Fetch the suggestions using an AJAX call.
          */
-        'ajax': (inst, q) => {
+        'ajax': (inst, q, signal) => {
 
             // Check for cached suggestions
             const cacheKey = q.substr(0, inst._options.minChars).toLowerCase()
@@ -698,16 +735,16 @@ Typeahead.behaviours = {
                     if (!inst._options.disableCache) {
                         inst._cache[cacheKey] = json.payload.suggestions
                     }
-                    return json.payload.suggestions
+                    return [json.payload.suggestions, signal]
                 })
         },
 
         /**
          * Return the list option (which should be an array)
          */
-        'array': (inst, q) => {
+        'array': (inst, q, signal) => {
             return new Promise((resolve, reject) => {
-                resolve(inst._options.list)
+                resolve([inst._options.list, signal])
             })
         },
 
@@ -715,7 +752,7 @@ Typeahead.behaviours = {
          * Select a list of DOM element using the list option as a CSS
          * selector and return the content of the elements as suggestions.
          */
-        'elements': (inst, q) => {
+        'elements': (inst, q, signal) => {
             return new Promise((resolve, reject) => {
 
                 const elms = $.many(inst._options.list)
@@ -726,26 +763,25 @@ Typeahead.behaviours = {
                         'value': content
                     }
                 })
-                resolve(suggestions)
-
+                resolve([suggestions, signal])
             })
         },
 
         /**
          * Parse the list as a JSON string and return the result.
          */
-        'json': (inst, q) => {
+        'json': (inst, q, signal) => {
             return new Promise((resolve, reject) => {
-                resolve(JSON.parse(inst._options.list))
+                resolve([JSON.parse(inst._options.list), signal])
             })
         },
 
         /**
          * Split the list option (which should be a comma separated string).
          */
-        'string': (inst, q) => {
+        'string': (inst, q, signal) => {
             return new Promise((resolve, reject) => {
-                resolve(inst._options.list.split(','))
+                resolve([inst._options.list.split(','), signal])
             })
         }
 

@@ -730,6 +730,33 @@ describe('Typeahead', () => {
                     otherTypeahead.close.should.have.been.called
                 })
             })
+
+            describe('cancel previous call', () => {
+
+                beforeEach(() => {
+                    sinon.spy(Typeahead.behaviours.fetch, 'array')
+
+                })
+
+                afterEach(() => {
+                    Typeahead.behaviours.fetch['array'].restore()
+                })
+
+                it('should prevent the results of the initial response '
+                    + 'being applied', async () => {
+
+                    otherTypeahead.update('fo')
+                    await otherTypeahead.update('fo')
+
+                    const arrayFunc = Typeahead.behaviours.fetch['array']
+                    arrayFunc.returnValues[0].then((response) => {
+                        response[1].cancelled.should.be.true
+                    })
+                    arrayFunc.returnValues[1].then((response) => {
+                        response[1].cancelled.should.be.false
+                    })
+                })
+            })
         })
     })
 
@@ -789,6 +816,7 @@ describe('Typeahead', () => {
             sinon.spy(typeahead, 'next')
             sinon.spy(typeahead, 'previous')
             sinon.spy(typeahead, 'select')
+            sinon.spy(typeahead, 'update')
         })
 
         afterEach(() => {
@@ -796,6 +824,7 @@ describe('Typeahead', () => {
             typeahead.next.restore()
             typeahead.previous.restore()
             typeahead.select.restore()
+            typeahead.update.restore()
             typeahead.destroy()
         })
 
@@ -946,10 +975,29 @@ describe('Typeahead', () => {
             })
 
         })
+
+        describe('update', () => {
+
+            it('should call the update method only after a short '
+                + 'delay', (done) => {
+
+                $.dispatch(typeahead.input, 'input')
+                $.dispatch(typeahead.input, 'input')
+                typeahead.update.should.not.have.been.called
+
+                const afterDelay = () => {
+                    typeahead.update.should.have.been.called
+                    done()
+                }
+
+                setTimeout(afterDelay, 200)
+            })
+        })
     })
 
     describe('behaviours > coerce', () => {
         const behaviours = Typeahead.behaviours.coerce
+        let signal = null
         let typeahead = null
 
         beforeEach(() => {
@@ -1023,7 +1071,12 @@ describe('Typeahead', () => {
 
     describe('behaviours > fetch', () => {
         const behaviours = Typeahead.behaviours.fetch
+        let signal = null
         let typeahead = null
+
+        beforeEach(() => {
+            signal = {'cancelled': true}
+        })
 
         afterEach(() => {
             if (typeahead) {
@@ -1068,16 +1121,23 @@ describe('Typeahead', () => {
                 typeahead.init()
 
                 // With no args
-                const suggestions = await behaviours.ajax(typeahead, 'fo')
+                const suggestions = await behaviours.ajax(
+                    typeahead,
+                    'fo',
+                    signal
+                )
                 suggestions.should.deep.equal([
-                    {
-                        'label': 'foo',
-                        'value': 'foo'
-                    },
-                    {
-                        'label': 'foobar',
-                        'value': 'foobar'
-                    }
+                    [
+                        {
+                            'label': 'foo',
+                            'value': 'foo'
+                        },
+                        {
+                            'label': 'foobar',
+                            'value': 'foobar'
+                        }
+                    ],
+                    signal
                 ])
             })
 
@@ -1091,16 +1151,23 @@ describe('Typeahead', () => {
                 typeahead.init()
 
                 // With args
-                const suggestions = await behaviours.ajax(typeahead, 'fo')
+                const suggestions = await behaviours.ajax(
+                    typeahead,
+                    'fo',
+                    signal
+                )
                 suggestions.should.deep.equal([
-                    {
-                        'label': 'foo',
-                        'value': 'foo'
-                    },
-                    {
-                        'label': 'foobar',
-                        'value': 'foobar'
-                    }
+                    [
+                        {
+                            'label': 'foo',
+                            'value': 'foo'
+                        },
+                        {
+                            'label': 'foobar',
+                            'value': 'foobar'
+                        }
+                    ],
+                    signal
                 ])
 
                 global.fetch
@@ -1119,8 +1186,8 @@ describe('Typeahead', () => {
                 )
                 typeahead.init()
 
-                await behaviours.ajax(typeahead, 'fo')
-                await behaviours.ajax(typeahead, 'fo')
+                await behaviours.ajax(typeahead, 'fo', signal)
+                await behaviours.ajax(typeahead, 'fo', signal)
 
                 global.fetch.should.have.been.calledOnce
             })
@@ -1137,8 +1204,8 @@ describe('Typeahead', () => {
                 )
                 typeahead.init()
 
-                await behaviours.ajax(typeahead, 'fo')
-                await behaviours.ajax(typeahead, 'fo')
+                await behaviours.ajax(typeahead, 'fo', signal)
+                await behaviours.ajax(typeahead, 'fo', signal)
 
                 global.fetch.should.have.been.calledTwice
 
@@ -1166,16 +1233,23 @@ describe('Typeahead', () => {
                 )
                 typeahead.init()
 
-                const suggestions = await behaviours.array(typeahead, 'fo')
+                const suggestions = await behaviours.array(
+                    typeahead,
+                    'fo',
+                    signal
+                )
                 suggestions.should.deep.equal([
-                    {
-                        'label': 'foo',
-                        'value': 'foo'
-                    },
-                    {
-                        'label': 'foobar',
-                        'value': 'foobar'
-                    }
+                    [
+                        {
+                            'label': 'foo',
+                            'value': 'foo'
+                        },
+                        {
+                            'label': 'foobar',
+                            'value': 'foobar'
+                        }
+                    ],
+                    signal
                 ])
             })
         })
@@ -1209,16 +1283,23 @@ describe('Typeahead', () => {
                 )
                 typeahead.init()
 
-                const suggestions = await behaviours.elements(typeahead, 'fo')
+                const suggestions = await behaviours.elements(
+                    typeahead,
+                    'fo',
+                    signal
+                )
                 suggestions.should.deep.equal([
-                    {
-                        'label': 'foo',
-                        'value': 'foo'
-                    },
-                    {
-                        'label': 'foobar',
-                        'value': 'foobar'
-                    }
+                    [
+                        {
+                            'label': 'foo',
+                            'value': 'foo'
+                        },
+                        {
+                            'label': 'foobar',
+                            'value': 'foobar'
+                        }
+                    ],
+                    signal
                 ])
             })
         })
@@ -1244,16 +1325,23 @@ describe('Typeahead', () => {
                 )
                 typeahead.init()
 
-                const suggestions = await behaviours.json(typeahead, 'fo')
+                const suggestions = await behaviours.json(
+                    typeahead,
+                    'fo',
+                    signal
+                )
                 suggestions.should.deep.equal([
-                    {
-                        'label': 'foo',
-                        'value': 'foo'
-                    },
-                    {
-                        'label': 'foobar',
-                        'value': 'foobar'
-                    }
+                    [
+                        {
+                            'label': 'foo',
+                            'value': 'foo'
+                        },
+                        {
+                            'label': 'foobar',
+                            'value': 'foobar'
+                        }
+                    ],
+                    signal
                 ])
             })
         })
@@ -1268,8 +1356,12 @@ describe('Typeahead', () => {
                 )
                 typeahead.init()
 
-                const suggestions = await behaviours.string(typeahead, 'fo')
-                suggestions.should.deep.equal(['foo', 'foobar'])
+                const suggestions = await behaviours.string(
+                    typeahead,
+                    'fo',
+                    signal
+                )
+                suggestions.should.deep.equal([['foo', 'foobar'], signal])
             })
         })
     })
