@@ -1,6 +1,6 @@
 {
   "name": "manhattan-typeahead",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Type-a-head and tokens for form fields.",
   "engines": {
     "node": ">=8.9.4"

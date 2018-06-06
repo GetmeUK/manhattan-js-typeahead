@@ -714,7 +714,7 @@ Typeahead.behaviours = {
                 qs = cacheKey
                 if (inst._cache[cacheKey]) {
                     return new Promise((resolve, reject) => {
-                        resolve(inst._cache[cacheKey])
+                        resolve([inst._cache[cacheKey], signal])
                     })
                 }
             }
