@@ -37,7 +37,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:GetmeUK/manhattan-js-date-picker.git"
+    "url": "git@github.com:GetmeUK/manhattan-js-typeahead.git"
   },
   "keywords": [
     "manhattan",
