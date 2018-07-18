@@ -87,6 +87,8 @@ export class Tokenizer {
                     return
                 }
 
+                event.preventDefault()
+
                 // Get the value to add to the tokenizer
                 let token = null
                 if (this._options.typeahead) {

@@ -14,51 +14,55 @@
             >
     </head>
     <body>
-        <div>
-            <label>
-                Language
-                <input
-                    name="languages_input"
-                    value=""
-                    data-mh-typeahead
-                    data-mh-typeahead--auto-first
-                    data-mh-typeahead--coerce="valueOnly"
-                    data-mh-typeahead--fetch="json"
-                    data-mh-typeahead--input="tokenizer"
-                    data-mh-typeahead--list='[
-                        "Ada",
-                        "Java",
-                        "JavaScript",
-                        "SQL",
-                        "C++",
-                        "C#",
-                        "Python",
-                        "PHP",
-                        "Ruby"
-                    ]'
-                    data-mh-typeahead--must-match
-                    data-mh-tokenizer
-                    data-mh-tokenizer--hidden-selector="[name=languages]"
-                    data-mh-tokenizer--sortable
-                    data-mh-tokenizer--typeahead
-                    >
-                <input type="hidden" name="languages">
-            </label>
-        </div>
+        <form onsubmit="console.log('submit')">
+            <div>
+                <label>
+                    Language
+                    <input
+                        name="languages_input"
+                        value=""
+                        data-mh-typeahead
+                        data-mh-typeahead--auto-first
+                        data-mh-typeahead--coerce="valueOnly"
+                        data-mh-typeahead--fetch="json"
+                        data-mh-typeahead--input="tokenizer"
+                        data-mh-typeahead--list='[
+                            "Ada",
+                            "Java",
+                            "JavaScript",
+                            "SQL",
+                            "C++",
+                            "C#",
+                            "Python",
+                            "PHP",
+                            "Ruby"
+                        ]'
+                        data-mh-typeahead--must-match
+                        data-mh-tokenizer
+                        data-mh-tokenizer--hidden-selector="[name=languages]"
+                        data-mh-tokenizer--sortable
+                        data-mh-tokenizer--typeahead
+                        >
+                    <input type="hidden" name="languages">
+                </label>
+            </div>
 
-        <div>
-            <label>
-                Tags
-                <input
-                    name="tags_input"
-                    value=""
-                    data-mh-tokenizer
-                    data-mh-tokenizer--hidden-selector="[name=tags]"
-                    data-mh-tokenizer--sortable
-                    >
-                <input type="hidden" name="tags">
-            </label>
-        </div>
+            <div>
+                <label>
+                    Tags
+                    <input
+                        name="tags_input"
+                        value=""
+                        data-mh-tokenizer
+                        data-mh-tokenizer--hidden-selector="[name=tags]"
+                        data-mh-tokenizer--sortable
+                        >
+                    <input type="hidden" name="tags">
+                </label>
+            </div>
+
+            <input type="submit" value="Save">
+        </form>
 
         <script src="../node_modules/manhattan-essentials/umd/index.js"></script>
         <script src="../node_modules/manhattan-sortable/umd/index.js"></script>
