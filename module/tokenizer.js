@@ -91,24 +91,35 @@ export class Tokenizer {
 
                 // Get the value to add to the tokenizer
                 let token = null
+                const value = this.input.value.trim()
+                let useInputValue = false
+
                 if (this._options.typeahead) {
 
                     // If the typeahead option is set then look for the
                     // `_token` value against the input.
                     if (this.input._token) {
+
                         token = this.input._token
                         delete this.input._token
+
+                    } else {
+
+                        // Check to see if the typeahead requires a match, if
+                        // not then use the value of the current input.
+                        useInputValue = !this.input._mhTypeahead.mustMatch
                     }
 
                 } else {
                     // If not then check for a value in the input
-                    const value = this.input.value.trim()
+                    useInputValue = true
+                }
 
-                    if (value !== '') {
-                        token = {
-                            'label': value,
-                            value
-                        }
+                // If applicable set the token as the input value
+                if (useInputValue && value !== '') {
+                    token = {
+                        'label': value,
+                        value
                     }
                 }
 

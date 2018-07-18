@@ -100,6 +100,12 @@ describe('Typeahead', () => {
             })
         })
 
+        describe('mustMatch', () => {
+            it('should return the must match flag for the typeahead', () => {
+                typeahead.mustMatch.should.be.false
+            })
+        })
+
         describe('suggestionCount', () => {
             it('should return the number of suggestions for the current '
                 + 'query', async () => {

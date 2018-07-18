@@ -235,6 +235,10 @@ export class Typeahead {
         return this._open
     }
 
+    get mustMatch() {
+        return this._options.mustMatch
+    }
+
     get suggestionCount() {
         return this._suggestions.length
     }
