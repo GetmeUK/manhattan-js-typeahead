@@ -731,7 +731,10 @@ Typeahead.behaviours = {
                 url = `${url}&q=${qs}`
             }
 
-            return fetch(url)
+            return fetch(
+                url,
+                {'credentials': 'include'}
+            )
                 .then((response) => {
                     return response.json()
                 })
