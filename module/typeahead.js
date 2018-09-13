@@ -726,9 +726,9 @@ Typeahead.behaviours = {
             // Fetch the suggestions via an AJAX request
             let url = inst._options.list
             if (url.split('?', 2).length === 1) {
-                url = `${url}?q=${qs}`
+                url = `${url}?q=${encodeURIComponent(qs)}`
             } else {
-                url = `${url}&q=${qs}`
+                url = `${url}&q=${encodeURIComponent(qs)}`
             }
 
             return fetch(
