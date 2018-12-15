@@ -18,6 +18,12 @@ export class Typeahead {
             {
 
                 /**
+                 * The autocomplete attribute to set against the typeahead
+                 * input.
+                 */
+                'autocompleteAttr': 'typeahead',
+
+                /**
                  * If true the first suggestion will be automatically selected
                  * when the typeahead is opened.
                  */
@@ -379,7 +385,10 @@ export class Typeahead {
         this.clearCache()
 
         // Prevent autocomplete behaviour against the input
-        this.input.setAttribute('autocomplete', 'off')
+        this.input.setAttribute(
+            'autocomplete',
+            this._options.autocompleteAttr
+        )
 
         // Create the typeahead element
         this._dom.typeahead = $.create(

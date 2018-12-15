@@ -374,11 +374,11 @@ describe('Typeahead', () => {
                     .true
             })
 
-            it('should set autocomplete to off against the input '
+            it('should set autocomplete to typeahead against the input '
                 + 'elment', () => {
 
                 typeahead.init()
-                inputElm.getAttribute('autocomplete').should.equal('off')
+                inputElm.getAttribute('autocomplete').should.equal('typeahead')
             })
 
             it('should set up event handlers for the typeahead', async () => {
