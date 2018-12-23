@@ -21,7 +21,7 @@ export class Typeahead {
                  * The autocomplete attribute to set against the typeahead
                  * input.
                  */
-                'autocompleteAttr': 'typeahead',
+                'autocompleteAttr': 'off',
 
                 /**
                  * If true the first suggestion will be automatically selected
