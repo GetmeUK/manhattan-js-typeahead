@@ -125,6 +125,22 @@ export class Typeahead {
 
                 // The typeahead can only be navigated if it's open
                 if (!this.isOpen) {
+
+                    // We allow arrow keys to trigger the typehead opening
+                    const openKeys = [
+                        'ArrowUp',
+                        'Up',
+                        'ArrowDown',
+                        'Down',
+                        'ArrowLeft',
+                        'Left',
+                        'ArrowRight',
+                        'Right'
+                    ]
+                    if (openKeys.indexOf(event.key) > -1) {
+                        this.open()
+                    }
+
                     return
                 }
 
@@ -313,6 +329,7 @@ export class Typeahead {
             this.input,
             {
                 'blur': this._handlers.close,
+                'focus': this._handlers.update,
                 'input': this._handlers.update,
                 'keydown': this._handlers.nav
             }
@@ -368,6 +385,9 @@ export class Typeahead {
         if (this.focused) {
             const suggestionElm = this.typeahead.children[this.index]
             suggestionElm.classList.add(focusedCSS)
+
+            // Ensure the focused suggestion is in view
+            this._dom.typeahead.scroll({'top': suggestionElm.offsetTop})
         }
     }
 
@@ -416,6 +436,8 @@ export class Typeahead {
             this.input,
             {
                 'blur': this._handlers.close,
+                'click': this._handlers.update,
+                'focus': this._handlers.update,
                 'input': this._handlers.update,
                 'keydown': this._handlers.nav
             }
@@ -470,6 +492,9 @@ export class Typeahead {
 
         // Flag the typeahead as open
         this._open = true
+
+        // Ensure the suggestions initially are scrolled to the top
+        this._dom.typeahead.scroll({'top': 0})
 
         // Dispatch opened event against the input
         $.dispatch(this.input, 'opened')
@@ -602,10 +627,12 @@ export class Typeahead {
                 })
 
                 // Limit the list of suggestions to the maximum suggestions
-                suggestions = suggestions.slice(
-                    0,
-                    this._options.maxSuggestions
-                )
+                if (this._options.maxSuggestions > 0) {
+                    suggestions = suggestions.slice(
+                        0,
+                        this._options.maxSuggestions
+                    )
+                }
 
                 // Update the suggestions
                 this._suggestions = suggestions
@@ -905,17 +932,21 @@ Typeahead.behaviours = {
             const aStarts = ql === a.label.substr(0, ql.length).toLowerCase()
             const bStarts = ql === b.label.substr(0, ql.length).toLowerCase()
 
-            if (aStarts && !bStarts) {
-                return -1
-            } else if (bStarts && !aStarts) {
-                return 1
-            }
+            if (ql.length > 0) {
 
-            // Compare the length of the suggestions
-            if (a.label.length > b.label.length) {
-                return 1
-            } else if (a.label.length < b.label.length) {
-                return -1
+                if (aStarts && !bStarts) {
+                    return -1
+                } else if (bStarts && !aStarts) {
+                    return 1
+                }
+
+                // Compare the length of the suggestions
+                if (a.label.length > b.label.length) {
+                    return 1
+                } else if (a.label.length < b.label.length) {
+                    return -1
+                }
+
             }
 
             // Compare alphabetically

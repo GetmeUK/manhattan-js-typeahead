@@ -10,6 +10,19 @@ chai.should()
 chai.use(require('sinon-chai'))
 
 
+// Implement a scroll method against elements (that does nothing)
+Object.defineProperty(
+    window.Element.prototype,
+    'scroll',
+    {
+        writable: true,
+        value: () => {
+            return
+        }
+    }
+)
+
+
 describe('Typeahead', () => {
 
     let inputElm = null
@@ -699,6 +712,30 @@ describe('Typeahead', () => {
 
             })
 
+            describe('suggestion cropping', () => {
+
+                afterEach(() => {
+                    otherTypeahead._options.maxSuggestions = 10
+                })
+
+                it('should apply no limit if not set', async () => {
+
+                    otherTypeahead._options.maxSuggestions = 0
+                    await otherTypeahead.update('fo')
+
+                    otherTypeahead.typeahead.children.length.should.equal(2)
+                })
+
+                it('should apply a limit if set', async () => {
+
+                    otherTypeahead._options.maxSuggestions = 1
+                    await otherTypeahead.update('fo')
+
+                    otherTypeahead.typeahead.children.length.should.equal(1)
+                })
+
+            })
+
             describe('no results', () => {
                 let originalList = null
 
@@ -835,6 +872,16 @@ describe('Typeahead', () => {
         })
 
         describe('nav', () => {
+
+            it('should open the typehead if closed when an arrow key is '
+                + 'pressed', async () => {
+
+                await typeahead.update('fo')
+                typeahead.close()
+
+                $.dispatch(inputElm, 'keydown', {'key': 'Up'})
+                typeahead.isOpen.should.be.true
+            })
 
             it('should call select when the enter key is pressed if the a '
                 + 'suggestion has focus', async () => {
@@ -1560,6 +1607,18 @@ describe('Typeahead', () => {
         })
 
         describe('length', () => {
+            it('should return 1 if theirs no query string', () => {
+
+                const result = behaviours.length(
+                    typeahead,
+                    '',
+                    {'label': 'foobar'},
+                    {'label': 'barfoo'}
+                )
+                result.should.equal(1)
+
+            })
+
             it('should return -1 if a starts with the query string and b '
                 + 'does not', () => {
 
