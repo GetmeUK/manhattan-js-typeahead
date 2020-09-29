@@ -387,7 +387,7 @@ export class Typeahead {
             suggestionElm.classList.add(focusedCSS)
 
             // Ensure the focused suggestion is in view
-            this._dom.typeahead.scroll({'top': suggestionElm.offsetTop})
+            this._dom.typeahead.scrollTop = suggestionElm.offsetTop
         }
     }
 
@@ -494,7 +494,7 @@ export class Typeahead {
         this._open = true
 
         // Ensure the suggestions initially are scrolled to the top
-        this._dom.typeahead.scroll({'top': 0})
+        this._dom.typeahead.scrollTop = 0
 
         // Dispatch opened event against the input
         $.dispatch(this.input, 'opened')
