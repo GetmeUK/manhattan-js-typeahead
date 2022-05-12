@@ -148,7 +148,9 @@ export class Typeahead {
                 switch (event.key) {
 
                 case 'Tab':
-                    if (this._options.mustMatch) {
+                    const q = this.constructor.behaviours
+                        .query[this._behaviours.query](this)
+                    if (this._options.mustMatch && q) {
                         this.select()
                     }
                     break
@@ -726,7 +728,11 @@ Typeahead.behaviours = {
 
             // Add the suggestion to the element and mark the portion of the
             // suggestion that matches the query.
-            elm.innerHTML = suggestion.label.replace(
+
+            const escapeDiv = document.createElement('div')
+            escapeDiv.textContent = suggestion.label
+
+            elm.innerHTML = escapeDiv.innerHTML.replace(
                 new RegExp($.escapeRegExp(q), 'gi'),
                 '<mark>$&</mark>'
             )
