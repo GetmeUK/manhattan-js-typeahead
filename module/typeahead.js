@@ -728,14 +728,14 @@ Typeahead.behaviours = {
 
             // Add the suggestion to the element and mark the portion of the
             // suggestion that matches the query.
+            elm.textContent = suggestion.label
 
-            const escapeDiv = document.createElement('div')
-            escapeDiv.textContent = suggestion.label
-
-            elm.innerHTML = escapeDiv.innerHTML.replace(
-                new RegExp($.escapeRegExp(q), 'gi'),
-                '<mark>$&</mark>'
-            )
+            if (q) {
+                elm.innerHTML = elm.innerHTML.replace(
+                    new RegExp($.escapeRegExp(q), 'gi'),
+                    '<mark>$&</mark>'
+                )
+            }
 
             return elm
         }
