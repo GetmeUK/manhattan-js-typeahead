@@ -730,9 +730,14 @@ Typeahead.behaviours = {
             // suggestion that matches the query.
             elm.textContent = suggestion.label
 
-            if (q) {
+            // Escape query
+            const escapeDiv = document.createElement('div')
+            escapeDiv.textContent = q
+            const qEsc = escapeDiv.innerHTML
+
+            if (qEsc) {
                 elm.innerHTML = elm.innerHTML.replace(
-                    new RegExp($.escapeRegExp(q), 'gi'),
+                    new RegExp($.escapeRegExp(qEsc), 'gi'),
                     '<mark>$&</mark>'
                 )
             }
