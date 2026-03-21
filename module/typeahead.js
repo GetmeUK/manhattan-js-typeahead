@@ -331,6 +331,7 @@ export class Typeahead {
             this.input,
             {
                 'blur': this._handlers.close,
+                'click': this._handlers.update,
                 'focus': this._handlers.update,
                 'input': this._handlers.update,
                 'keydown': this._handlers.nav
