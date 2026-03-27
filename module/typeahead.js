@@ -118,11 +118,11 @@ export class Typeahead {
 
         // Store the parent element
         if (this._options.parent === null) {
-            this.parent = document.body
+            this._dom.parent = document.body
         } else if (typeof this._options.parent === 'string') {
-            this.parent = $.one(this._options.parent)
+            this._dom.parent = $.one(this._options.parent)
         } else if (this._options.parent instanceof Element) {
-            this.parent = this._options.parent
+            this._dom.parent = this._options.parent
         }
 
         // Store a reference to the input element
@@ -368,7 +368,7 @@ export class Typeahead {
             )
 
             // Remove the element
-            this.parent.removeChild(this.typeahead)
+            this._dom.parent.removeChild(this.typeahead)
             this._dom.typeahead = null
         }
 
@@ -432,7 +432,7 @@ export class Typeahead {
             'div',
             {'class': this.constructor.css['typeahead']}
         )
-        this.parent.appendChild(this._dom.typeahead)
+        this._dom.parent.appendChild(this._dom.typeahead)
 
         // Set up event listeners
         $.listen(
@@ -688,10 +688,10 @@ export class Typeahead {
         let top = rect.top + window.pageYOffset
         let left = rect.left + window.pageXOffset
 
-        if (this.parent !== document.body) {
-            const parentRect = this.parent.getBoundingClientRect()
-            top = rect.top - parentRect.top + this.parent.scrollTop
-            left = rect.left - parentRect.left + this.parent.scrollLeft
+        if (this._dom.parent !== document.body) {
+            const parentRect = this._dom.parent.getBoundingClientRect()
+            top = rect.top - parentRect.top + this._dom.parent.scrollTop
+            left = rect.left - parentRect.left + this._dom.parent.scrollLeft
         }
 
         this.typeahead.style.top = `${top + rect.height}px`
