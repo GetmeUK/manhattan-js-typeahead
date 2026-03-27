@@ -65,7 +65,12 @@ export class Typeahead {
                  * If true then only a value matching one of the typeaheads
                  * suggestions can populate the associated field.
                  */
-                'mustMatch': false
+                'mustMatch': false,
+
+                /**
+                 * The parent element (or a selector) to add the typeahead to.
+                 */
+                'parent': null
             },
             options,
             input,
@@ -109,6 +114,15 @@ export class Typeahead {
         this._dom = {
             'input': null,
             'typeahead': null
+        }
+
+        // Store the parent element
+        if (this._options.parent === null) {
+            this.parent = document.body
+        } else if (typeof this._options.parent === 'string') {
+            this.parent = $.one(this._options.parent)
+        } else if (this._options.parent instanceof Element) {
+            this.parent = this._options.parent
         }
 
         // Store a reference to the input element
@@ -348,13 +362,13 @@ export class Typeahead {
         }
 
         if (this.typeahead) {
-            $.listen(
+            $.ignore(
                 this.typeahead,
                 {'mousedown': this._handlers.select}
             )
 
             // Remove the element
-            document.body.removeChild(this.typeahead)
+            this.parent.removeChild(this.typeahead)
             this._dom.typeahead = null
         }
 
@@ -418,7 +432,7 @@ export class Typeahead {
             'div',
             {'class': this.constructor.css['typeahead']}
         )
-        document.body.appendChild(this._dom.typeahead)
+        this.parent.appendChild(this._dom.typeahead)
 
         // Set up event listeners
         $.listen(
@@ -671,8 +685,15 @@ export class Typeahead {
      */
     _track() {
         const rect = this.input.getBoundingClientRect()
-        const top = rect.top + window.pageYOffset
-        const left = rect.left + window.pageXOffset
+        let top = rect.top + window.pageYOffset
+        let left = rect.left + window.pageXOffset
+
+        if (this.parent !== document.body) {
+            const parentRect = this.parent.getBoundingClientRect()
+            top = rect.top - parentRect.top + this.parent.scrollTop
+            left = rect.left - parentRect.left + this.parent.scrollLeft
+        }
+
         this.typeahead.style.top = `${top + rect.height}px`
         this.typeahead.style.left = `${left}px`
         this.typeahead.style.width = `${rect.width}px`
